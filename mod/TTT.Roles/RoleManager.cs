@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using TTT.Player;
 using TTT.Public.Action;
 using TTT.Public.Behaviors;
+using TTT.Public.Configuration;
 using TTT.Public.Extensions;
 using TTT.Public.Formatting;
 using TTT.Public.Mod.Role;
@@ -51,6 +52,14 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
     [GameEventHandler]
     private HookResult OnRoundStart(EventRoundFreezeEnd @event, GameEventInfo info)
     {
+        foreach (CCSPlayerController controller in Utilities.GetPlayers())
+        {
+            if (controller.IsBot)
+            {
+                CreatePlayer(controller);
+            }
+        }
+        
         _roundService.SetRoundStatus(RoundStatus.Waiting);
         foreach (var player in Utilities.GetPlayers().Where(player => player.IsReal() && player.Team != CsTeam.None || player.Team != CsTeam.Spectator))
         {
@@ -107,9 +116,13 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
     private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
     {
         var players = Utilities.GetPlayers()
-            .Where(player => player.IsValid).Where(player => player.IsReal()).ToList();
+            .Where(player => player.IsValid).Where(player => player.IsReal() && !player.IsBot).ToList();
 
-        foreach (var player in players) player.PrintToCenter(GetWinner().FormatStringFullAfter("s has won!"));
+        Server.PrintToChatAll(StringUtils.FormatTTT(GetWinner().FormatStringFullAfter("s have won!")));
+        foreach (var player in players)
+        {
+            player.PrintToCenter(GetWinner().FormatStringFullAfter("s have won!"));
+        }
 
         Server.NextFrame(Clear);
         _muteManager.UnMuteAll();
@@ -137,8 +150,8 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
             .Where(player => player.Team is not (CsTeam.Spectator or CsTeam.None))
             .ToList();
 
-        var traitorCount = (int)Math.Floor(Convert.ToDouble(eligible.Count / 3));
-        var detectiveCount = (int)Math.Floor(Convert.ToDouble(eligible.Count / 8));
+        var traitorCount = (int)Math.Floor(Convert.ToDouble(eligible.Count / PluginConfig.TTTConfig.TraitorRatio));
+        var detectiveCount = (int)Math.Floor(Convert.ToDouble(eligible.Count / PluginConfig.TTTConfig.DetectiveRatio));
 
         _traitorsLeft = traitorCount;
         _innocentsLeft = eligible.Count - traitorCount;
@@ -186,6 +199,7 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
 
     public void AddTraitor(CCSPlayerController player)
     {
+        Console.WriteLine(player.PlayerName);
         GetPlayer(player).SetPlayerRole(Role.Traitor);
         player.SwitchTeam(CsTeam.Terrorist);
         player.PrintToCenter(Role.Traitor.FormatStringFullBefore("You are now a(n)"));
@@ -237,12 +251,12 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
 
     private Role GetWinner()
     {
-        return _traitorsLeft == 0 ? Role.Traitor : Role.Innocent;
+        return _innocentsLeft == 0 ? Role.Traitor : Role.Innocent;
     }
 
     private void SendDeathMessage(CCSPlayerController playerWhoWasDamaged, CCSPlayerController attacker)
     {
-        Server.PrintToChatAll(StringUtils.FormatTTT($"{GetRole(playerWhoWasDamaged).FormatStringFullAfter(" has been found.")}"));
+        if(PluginConfig.TTTConfig.AnnounceDeaths) Server.PrintToChatAll(StringUtils.FormatTTT($"{GetRole(playerWhoWasDamaged).FormatStringFullAfter(" has been found.")}"));
             
         if (attacker == playerWhoWasDamaged || attacker == null) return;
             
@@ -250,7 +264,10 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
             
         playerWhoWasDamaged.PrintToChat(StringUtils.FormatTTT(
             $"You were killed by {GetRole(attacker).FormatStringFullAfter(" " + attacker.PlayerName)}."));
-        attacker.PrintToChat(StringUtils.FormatTTT($"You killed {GetRole(playerWhoWasDamaged).FormatStringFullAfter(" " + playerWhoWasDamaged.PlayerName)}."));
-
+        
+        attacker.PrintToChat(PluginConfig.TTTConfig.KnowRoleOfVictim
+            ? StringUtils.FormatTTT(
+                $"You killed {GetRole(playerWhoWasDamaged).FormatStringFullAfter(" " + playerWhoWasDamaged.PlayerName)}.")
+            : StringUtils.FormatTTT($"You killed {playerWhoWasDamaged.PlayerName}."));
     }
 }

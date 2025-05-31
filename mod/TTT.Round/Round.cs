@@ -12,11 +12,12 @@ namespace TTT.Round;
 public class Round
 {
     private readonly IRoleService _roleService;
-    private float _graceTime = Config.TTTConfig.GraceTime * 64;
+    private float _graceTime;
 
     public Round(IRoleService roleService)
     {
         _roleService = roleService;
+        _graceTime = PluginConfig.TTTConfig.GraceTime * 64;
     }
 
     public void Tick()

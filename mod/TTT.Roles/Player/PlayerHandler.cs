@@ -7,7 +7,7 @@ namespace TTT.Player;
 
 public class PlayerHandler : IPlayerService
 {
-    private readonly Dictionary<CCSPlayerController, GamePlayer> _players = [];
+    private readonly Dictionary<CCSPlayerController, GamePlayer> _players = new ();
     
     public Dictionary<CCSPlayerController, GamePlayer> GetPlayers()
     {

@@ -18,7 +18,7 @@ public class ShopManager
     {
         _playerService = manager;
         _plugin = plugin;
-        plugin.AddCommand("css_shop", "Open the shop menu", OnShopCommand);
+        plugin.AddCommand("css_shop", "Opens the shop menu", OnShopCommand);
         plugin.AddCommand("css_buy", "Buys specified item", OnBuyCommand);
     }
     

@@ -15,7 +15,7 @@ public class GamePlayer : IInventory
     private long _credits;
     private CCSPlayerController? _killer;
     private CRagdollProp? _ragdollProp;
-    private readonly List<IShopItem> _items = [];
+    private readonly List<IShopItem> _items = new ();
     private bool _shopOpen = false;
     private bool _isFound = false;
     private bool _isDead = false;

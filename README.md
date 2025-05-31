@@ -1,4 +1,45 @@
-## cs2TTT
+# cs2TTT
+A gmod inspired Trouble in Terrorist Town plugin for CS2
+
+[//]: # (## Items & Shop)
+
+[//]: # (You can open the shop with the `css_shop` command.)
+
+[//]: # ()
+[//]: # (You can buy items during the game by using the `css_buy <itemName>` command, where you replace `<itemName>` with the _itemName_ of the item of your choice.)
+
+[//]: # ()
+[//]: # (Below is a list of currently added items, an explanation of **what they do** &#40;still to be added&#41;, which **team** can buy them, their **price** and their **itemName** )
+
+[//]: # ()
+[//]: # (| Item              | Use     | Team      | Price | itemName   |)
+
+[//]: # (| :---------------- | :------ | :-------: | :---: | :--------: |)
+
+[//]: # (| AK47              |    -    | Traitor   | 500   | ak47       |)
+
+[//]: # (| AWP               |    -    | Traitor   | 2000  | awp        |)
+
+[//]: # (| Wall Hack         |    -    | Traitor   | 1000  | wallhack   |)
+
+[//]: # (| Taser             |    -    | Detective | 1000  | taser      |)
+
+[//]: # (| DNA Scanner       |    -    | Detective | 1000  | dnascanner |)
+
+[//]: # ()
+[//]: # (## Commands)
+
+[//]: # ()
+[//]: # (### In-Game)
+
+[//]: # (* `css_shop` Opens the shop menu )
+
+[//]: # (* `css_buy <itemName>` Buys the specified item if you have enough money &#40;e.g. `css_buy ak47` or `css_buy wallhack`&#41;)
+
+[//]: # ()
+[//]: # (### Console)
+
+[//]: # (* `css_roles` = Get the roles of all players)
 
 ## Contributing
 TTT is in heavy development and I want you to know that contributions are always welcome. Please follow Microsoft's dependency injection system.
@@ -50,10 +91,10 @@ public class AwpItem : IShopItem
 ```
 
 ## Road Map
-- [✅] Role assignment
-- [✅] DNA Scanner
-- [✅] Tazer
-- [ ] Configuration
+- [x] Role assignment
+- [x] DNA Scanner
+- [x] Tazer
+- [x] Configuration
 - [ ] Karma system
 - [ ] Shop
 - [ ] RDM Manager

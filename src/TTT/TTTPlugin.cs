@@ -1,8 +1,12 @@
 ﻿using System.Collections.Immutable;
+using System.ComponentModel.Design.Serialization;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TTT.Public.Behaviors;
+using TTT.Public.Configuration;
 
 namespace TTT;
 
@@ -34,6 +38,8 @@ public class TTTPlugin : BasePlugin
     public override void Load(bool hotReload)
     {
         Logger.LogInformation("[TTT] Loading...");
+        
+        PluginConfig.ReloadConfig();
 
         _scope = _provider.CreateScope();
         _extensions = _scope.ServiceProvider.GetServices<IPluginBehavior>()
@@ -59,6 +65,8 @@ public class TTTPlugin : BasePlugin
     public override void Unload(bool hotReload)
     {
         Logger.LogInformation("[TTT] Shutting down...");
+        
+        PluginConfig.ReloadConfig();
 
         if (_extensions != null)
             foreach (var extension in _extensions)
