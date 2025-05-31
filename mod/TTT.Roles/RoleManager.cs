@@ -43,12 +43,43 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
         //CreditManager.Register(parent, this);
         
         parent.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnect);
+        parent.RegisterEventHandler<EventRoundPrestart>(OnRoundPrepare);
         parent.RegisterEventHandler<EventRoundFreezeEnd>(OnRoundStart);
         parent.RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
         parent.RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
         parent.RegisterEventHandler<EventPlayerDeath>(OnPlayerDeath, HookMode.Pre);
+        parent.RegisterEventHandler<EventPlayerHurt>(OnPlayerDamage, HookMode.Pre);
+    }
+    
+    public void SetMoveType(CCSPlayerController? player, MoveType_t moveType)
+    {
+        player.PlayerPawn.Value.MoveType = moveType;
+        player.PlayerPawn.Value.ActualMoveType = moveType;
+        Utilities.SetStateChanged(player.PlayerPawn.Value, "CBaseEntity", "m_MoveType");
     }
 
+    [GameEventHandler]
+    private HookResult OnRoundPrepare(EventRoundPrestart @event, GameEventInfo info)
+    {
+        foreach (CCSPlayerController controller in Utilities.GetPlayers())
+        {
+            CCSPlayerPawn pawn = controller.PlayerPawn.Value;
+
+            // controller.DesiredObserverMode = 0;
+            pawn.BotAllowActive = true;
+            controller.RemoveWeapons();
+            controller.TakesDamage = true;
+            pawn.Render = Color.FromArgb(255, 255, 255, 255);
+            pawn.RenderMode = RenderMode_t.kRenderNormal;
+            Utilities.SetStateChanged(pawn, "CBaseModelEntity", "m_clrRender");
+            SetMoveType(controller, MoveType_t.MOVETYPE_WALK);
+            pawn.MaxHealth = 100;
+            pawn.Health = pawn.MaxHealth;
+        }
+
+        return HookResult.Continue;
+    }
+    
     [GameEventHandler]
     private HookResult OnRoundStart(EventRoundFreezeEnd @event, GameEventInfo info)
     {
@@ -84,30 +115,91 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
     }
     
     [GameEventHandler]
+    private HookResult OnPlayerDamage(EventPlayerHurt @event, GameEventInfo info)
+    {
+        var killer = @event.Attacker;
+        var victim = @event.Userid;
+        var damage = @event.DmgHealth;
+    
+        Console.WriteLine($"SOMEONE RECEIVED {damage} DAMAGE");
+        
+        if (victim != null && victim.MoveType == MoveType_t.MOVETYPE_OBSERVER)
+        {
+            return HookResult.Stop;
+        }
+        
+        if (killer == null || victim == null) return HookResult.Continue;
+        
+        if (!killer.IsReal() || !victim.IsReal()) return HookResult.Continue;
+        
+        CCSPlayerPawn victimPawn = victim.PlayerPawn.Value;
+        
+        if (victimPawn.Health <= 0)
+        {
+            Console.WriteLine($"(Pre-)Health: {victimPawn.Health} and Damage: {@event.DmgHealth}");
+            @event.DmgHealth = 0;
+            
+            PlayerDeath(killer, victim);
+        }
+    
+        return HookResult.Continue;
+    }
+
+    public void PlayerDeath(CCSPlayerController? killer, CCSPlayerController victim)
+    {
+        CCSPlayerPawn victimPawn = victim.PlayerPawn.Value;
+        
+        victimPawn.Health = victimPawn.MaxHealth;
+        victimPawn.BotAllowActive = false;
+        victim.RemoveWeapons();
+        victimPawn.TakesDamage = false;
+        victimPawn.Render = Color.FromArgb(0, 255, 255, 255);
+        victimPawn.RenderMode = RenderMode_t.kRenderNone;
+        Utilities.SetStateChanged(victimPawn, "CBaseModelEntity", "m_clrRender");
+        SetMoveType(victim, MoveType_t.MOVETYPE_NOCLIP);
+        Utilities.SetStateChanged(victimPawn, "CCSPlayerPawn", "m_MoveType");
+        // victim.DesiredObserverMode = 4;
+        
+        victim.ModifyScoreBoard();
+        
+        GetPlayer(victim).SetKiller(killer);
+        
+        _muteManager.Mute(victim);
+        
+        if (IsTraitor(victim)) _traitorsLeft--;
+        if (IsDetective(victim) || IsInnocent(victim)) _innocentsLeft--;
+        if (_traitorsLeft == 0 || _innocentsLeft == 0) Server.NextFrame(() => _roundService.ForceEnd());
+        
+        if (killer != null) Server.NextFrame(() => SendDeathMessage(victim, killer));
+    }
+    
+    [GameEventHandler]
     private HookResult OnPlayerDeath(EventPlayerDeath @event, GameEventInfo info)
     {
         info.DontBroadcast = true;
 
-        var playerWhoWasDamaged = @event.Userid;
-        var attacker = @event.Attacker;
+        var victim = @event.Userid;
+        var killer = @event.Attacker;
+        
+        Console.WriteLine("SOMEONE HAS DIED, THIS SHOULDN'T BE POSSIBLE WTH");
+        
+        // @event.Free();
+        
+        if (victim == null) return HookResult.Continue;
+        
+        Server.NextFrame(() =>
+        {
+            victim.CommitSuicide(false, true);
 
-        if (playerWhoWasDamaged == null) return HookResult.Continue;
-
-        playerWhoWasDamaged.ModifyScoreBoard();
-        
-        GetPlayer(playerWhoWasDamaged).SetKiller(attacker);
-        
-        _muteManager.Mute(playerWhoWasDamaged);
-        
-        if (IsTraitor(playerWhoWasDamaged)) _traitorsLeft--;
-        
-        if (IsDetective(playerWhoWasDamaged) || IsInnocent(playerWhoWasDamaged)) _innocentsLeft--;
-        
-        if (_traitorsLeft == 0 || _innocentsLeft == 0) Server.NextFrame(() => _roundService.ForceEnd());
-
-        Server.NextFrame(() => playerWhoWasDamaged.CommitSuicide(false, true));
+            victim.Respawn();
             
-        Server.NextFrame(() => SendDeathMessage(playerWhoWasDamaged, attacker));
+            victim.RemoveWeapons();
+            victim.TakesDamage = false;
+            victim.PlayerPawn.Value.Render = Color.FromArgb(0, 255, 255, 255);
+            victim.MoveType = MoveType_t.MOVETYPE_NOCLIP;
+        });
+            
+        PlayerDeath(killer, victim);
         
         return HookResult.Continue;
     }

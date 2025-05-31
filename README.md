@@ -1,6 +1,11 @@
 # cs2TTT
 A gmod inspired Trouble in Terrorist Town plugin for CS2
 
+## Noteworthy features
+* The detective gets a taser (Zeus), which upon use on a player, reveals their role
+* Traitors can use team chat to privately communicate with each other
+
+
 [//]: # (## Items & Shop)
 
 [//]: # (You can open the shop with the `css_shop` command.)
@@ -22,7 +27,7 @@ A gmod inspired Trouble in Terrorist Town plugin for CS2
 
 [//]: # (| Wall Hack         |    -    | Traitor   | 1000  | wallhack   |)
 
-[//]: # (| Taser             |    -    | Detective | 1000  | taser      |)
+[//]: # (| Taser             | Reveal someone's role | Detective | 1000  | taser      |)
 
 [//]: # (| DNA Scanner       |    -    | Detective | 1000  | dnascanner |)
 
