@@ -12,7 +12,7 @@ public class ShopManager
 {
     private readonly IPlayerService _playerService;
     private readonly BasePlugin _plugin;
-    private static ShopManager Manager;
+    private static ShopManager? Manager;
     
     private ShopManager(BasePlugin plugin, IPlayerService manager)
     {
@@ -29,20 +29,22 @@ public class ShopManager
     
     public void OpenShop(GamePlayer player)
     {
-        var role = player.PlayerRole();
+        Role role = player.PlayerRole();
+        CCSPlayerController? controller = player.Player();
+        if (controller == null) return;
         switch (role)
         {
             case Role.Innocent:
-                new ShopMenu(_plugin, BaseShopHandler.Get(), player).Open(player.Player());
+                new ShopMenu(_plugin, BaseShopHandler.Get(), player).Open(controller);
                 player.SetShopOpen(true);
                 break;
             case Role.Detective:
-                new ShopMenu(_plugin, DetectiveShopHandler.Get(), player).Open(player.Player());
+                new ShopMenu(_plugin, DetectiveShopHandler.Get(), player).Open(controller);
 
                 player.SetShopOpen(true);
                 break;
             case Role.Traitor:
-                new ShopMenu(_plugin, TraitorShopHandler.Get(), player).Open(player.Player());
+                new ShopMenu(_plugin, TraitorShopHandler.Get(), player).Open(controller);
                 player.SetShopOpen(true);
                 break;
             case Role.Unassigned:

@@ -22,19 +22,22 @@ public class ShopMenu
 
     public void BuyItem(GamePlayer player, IShopItem item)
     {
-        var successful = item.OnBuy(player);
+        BuyResult successful = item.OnBuy(player);
+        CCSPlayerController? controller = player.Player();
+        if (controller == null) return;
+        
         switch (successful)
         {
             case BuyResult.NotEnoughCredits:
-                player.Player()
+                controller
                     .PrintToChat(StringUtils.FormatTTT($"You don't have enough credits to buy {item.Name()}"));
                 break;
             case BuyResult.Successful:
-                player.Player().PrintToChat(StringUtils.FormatTTT($"You have bought {item.Name()}"));
+                controller.PrintToChat(StringUtils.FormatTTT($"You have bought {item.Name()}"));
                 player.AddItem(item);
                 break;
             case BuyResult.AlreadyOwned:
-                player.Player().PrintToChat(StringUtils.FormatTTT($"You already own {item.Name()}"));
+                controller.PrintToChat(StringUtils.FormatTTT($"You already own {item.Name()}"));
                 break;
             case BuyResult.IncorrectRole:
                 break;
@@ -45,24 +48,27 @@ public class ShopMenu
 
     public void BuyItem(GamePlayer player, int index)
     {
-        var item = _shopItemHandler.GetShopItems().ElementAt(index);
+        IShopItem item = _shopItemHandler.GetShopItems().ElementAt(index);
         BuyItem(player, item);
     }
 
     public void BuyItem(GamePlayer player, string name)
     {
-        foreach (var item in _shopItemHandler.GetShopItems())
+        foreach (IShopItem item in _shopItemHandler.GetShopItems())
         {
             if (!item.SimpleName().Equals(name)) continue;
             BuyItem(player, item);
             return;
         }
-        player.Player().PrintToChat(StringUtils.FormatTTT("Item not found!"));
+
+        CCSPlayerController? controller = player.Player();
+        if (controller == null) return;
+        controller.PrintToChat(StringUtils.FormatTTT("Item not found!"));
     }
 
     public void Create()
     {
-        foreach (var option in _menu.MenuOptions.Where(option => option.Text.Equals("close")))
+        foreach (ChatMenuOption option in _menu.MenuOptions.Where(option => option.Text.Equals("close")))
         {
             option.OnSelect += (player, _) =>
             {
@@ -70,9 +76,9 @@ public class ShopMenu
             };
         }
 
-        for (var index = 0; index < _shopItemHandler.GetShopItems().Count; index++)
+        for (int index = 0; index < _shopItemHandler.GetShopItems().Count; index++)
         {
-            var item = _shopItemHandler.GetShopItems().ElementAt(index);
+            IShopItem item = _shopItemHandler.GetShopItems().ElementAt(index);
             _menu.AddMenuOption(item.Name() + $" - {item.Price()} credits",
                 (player, _) =>
                 {

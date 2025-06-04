@@ -17,7 +17,7 @@ public class Round
     public Round(IRoleService roleService)
     {
         _roleService = roleService;
-        _graceTime = PluginConfig.TTTConfig.GraceTime * 64;
+        _graceTime = PluginConfig.TttConfig.GraceTime * 64;
     }
 
     public void Tick()
@@ -35,7 +35,7 @@ public class Round
         {
             Server.NextFrame(() =>
             {
-                player.PrintToCenterHtml(
+                player?.PrintToCenterHtml(
                     $"{formattedColor}<b>[TTT] Game is starting in {Math.Floor(_graceTime / 64)} seconds</b></font>");
             });
         }
@@ -64,7 +64,7 @@ public class Round
     {
         foreach (var player in _roleService.GetInnocents())
         {
-            Server.NextFrame(() => player.PrintToChat(StringUtils.FormatTTT("You are now an innocent")));
+            Server.NextFrame(() => player?.PrintToChat(StringUtils.FormatTTT("You are now an innocent")));
         }
     }
     
@@ -74,12 +74,15 @@ public class Round
         
         foreach (var traitor in traitors)
         {
-            Server.NextFrame(() => traitor.PrintToChat(StringUtils.FormatTTT("You are a Traitor")));
-            Server.NextFrame(() => traitor.PrintToChat(StringUtils.FormatTTT("Traitors:")));
+            Server.NextFrame(() => traitor?.PrintToChat(StringUtils.FormatTTT("You are a Traitor")));
+            Server.NextFrame(() => traitor?.PrintToChat(StringUtils.FormatTTT("Traitors:")));
             foreach (var player in traitors)
             {
-                var message = StringUtils.FormatTTT(Role.Traitor.FormatStringFullAfter(player.PlayerName));
-                Server.NextFrame(() => traitor.PrintToChat(message));
+                if (player != null)
+                {
+                    var message = StringUtils.FormatTTT(Role.Traitor.FormatStringFullAfter(player.PlayerName));
+                    Server.NextFrame(() => traitor?.PrintToChat(message));
+                }
             }
         }
     }
@@ -90,12 +93,15 @@ public class Round
         
         foreach (var detective in detectives)
         {
-            Server.NextFrame(() => detective.PrintToChat(StringUtils.FormatTTT("You are a Detective")));
-            Server.NextFrame(() => detective.PrintToChat(StringUtils.FormatTTT("Detective:")));
+            Server.NextFrame(() => detective?.PrintToChat(StringUtils.FormatTTT("You are a Detective")));
+            Server.NextFrame(() => detective?.PrintToChat(StringUtils.FormatTTT("Detective:")));
             foreach (var player in detectives)
             {
-                var message = StringUtils.FormatTTT(Role.Detective.FormatStringFullAfter(" " + player.PlayerName));
-                Server.NextFrame(() => detective.PrintToChat(message));
+                if (player != null)
+                {
+                    var message = StringUtils.FormatTTT(Role.Detective.FormatStringFullAfter(" " + player.PlayerName));
+                    Server.NextFrame(() => detective?.PrintToChat(message));
+                }
             }
         }
     }

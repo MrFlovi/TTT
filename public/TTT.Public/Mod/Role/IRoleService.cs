@@ -7,9 +7,9 @@ public interface IRoleService : IPlayerService
 {
     Role GetRole(CCSPlayerController player);
     void AddRoles();
-    ISet<CCSPlayerController> GetTraitors();
-    ISet<CCSPlayerController> GetDetectives();
-    ISet<CCSPlayerController> GetInnocents();
+    HashSet<CCSPlayerController?> GetTraitors();
+    HashSet<CCSPlayerController?> GetDetectives();
+    HashSet<CCSPlayerController?> GetInnocents();
     bool IsDetective(CCSPlayerController player);
     bool IsTraitor(CCSPlayerController player);
     void AddDetective(CCSPlayerController player);

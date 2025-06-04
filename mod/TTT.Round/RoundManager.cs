@@ -1,14 +1,16 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CounterStrikeSharp.API.Modules.Timers;
 using TTT.Public.Action;
+using TTT.Public.Configuration;
 using TTT.Public.Extensions;
 using TTT.Public.Formatting;
 using TTT.Public.Mod.Role;
 using TTT.Public.Mod.Round;
+using TTT.Shop.Items.Traitor;
 
 namespace TTT.Round;
 
@@ -19,10 +21,12 @@ public class RoundManager : IRoundService
     private Round? _round;
     private RoundStatus _roundStatus = RoundStatus.Paused;
 
+    private int _roundTimeElapsedSeconds = 0;
+
     public RoundManager(IRoleService roleService, BasePlugin plugin)
     {
         _roleService = roleService;
-        _logs = new LogsListener(roleService, plugin, 1);
+        _logs = new LogsListener(roleService, plugin);
         plugin.RegisterListener<Listeners.OnTick>(TickWaiting);
         
         plugin.AddCommandListener("jointeam", (player, info) =>
@@ -31,7 +35,7 @@ public class RoundManager : IRoundService
             if (player == null) return HookResult.Continue;
             if (!player.IsReal()) return HookResult.Continue;
             if (_roleService.GetRole(player) != Role.Unassigned) return HookResult.Continue;
-            Server.NextFrame(() => player.CommitSuicide(false, true));
+            Server.NextFrame(() => player?.CommitSuicide(false, true));
 
             return HookResult.Continue;
         }, HookMode.Pre);
@@ -41,17 +45,29 @@ public class RoundManager : IRoundService
             if (hook.GetParam<CEntityInstance>(0).DesignerName is not "player") return HookResult.Continue;
             return _roundStatus != RoundStatus.Waiting ? HookResult.Continue : HookResult.Stop;
         }, HookMode.Pre);
-
-        plugin.AddTimer(3, () =>
+        
+        plugin.AddTimer(1, () =>
         {
+            _roundTimeElapsedSeconds++;
+
+            if (_roundTimeElapsedSeconds == PluginConfig.TttConfig.GiveWallhackTimeSeconds)
+            {
+                foreach (CCSPlayerController? controller in _roleService.GetTraitors())
+                {
+                    if (controller == null) continue;
+                    
+                    _roleService.GetPlayer(controller).AddItem(new WallHackItem());
+                }
+            }
+            
             if (_roundStatus == RoundStatus.Started && Utilities.GetPlayers().Count(player => player.PawnIsAlive) == 1)
             {
                 ForceEnd();
             }
 
-            var traitorCount = _roleService.GetTraitors().Count(player => player.PawnIsAlive);
-            var innocentCount = _roleService.GetInnocents().Count(player => player.PawnIsAlive);
-            var detectiveCount = _roleService.GetDetectives().Count(player => player.PawnIsAlive);
+            var traitorCount = _roleService.GetTraitors().Count(player => player != null && player.PawnIsAlive);
+            var innocentCount = _roleService.GetInnocents().Count(player => player != null && player.PawnIsAlive);
+            var detectiveCount = _roleService.GetDetectives().Count(player => player != null && player.PawnIsAlive);
 
             if (_roundStatus == RoundStatus.Started && (traitorCount == 0 || innocentCount + detectiveCount == 0))
             {
@@ -68,6 +84,8 @@ public class RoundManager : IRoundService
 
     public void SetRoundStatus(RoundStatus roundStatus)
     {
+        _roundStatus = roundStatus;
+        
         switch (roundStatus)
         {
             case RoundStatus.Ended:
@@ -84,7 +102,6 @@ public class RoundManager : IRoundService
             default:
                 throw new ArgumentOutOfRangeException(nameof(roundStatus), roundStatus, "Invalid round status.");
         }
-        _roundStatus = roundStatus;
     }
 
     public void TickWaiting()
@@ -117,6 +134,7 @@ public class RoundManager : IRoundService
     {
         foreach (var player in Utilities.GetPlayers().Where(player => player.IsReal()).Where(player => player.IsReal())
                      .ToList()) player.VoiceFlags = VoiceFlags.Normal;
+        _roundTimeElapsedSeconds = 0;
         _round!.Start(); 
     }
 
@@ -125,7 +143,7 @@ public class RoundManager : IRoundService
         if (_roundStatus == RoundStatus.Ended) return;
         _roundStatus = RoundStatus.Ended;
         _logs.IncrementRound();
-        Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.TerminateRound(5,
+        Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!.TerminateRound(10,
             RoundEndReason.RoundDraw);
     }
     

@@ -27,7 +27,7 @@ public class AwpItem : IShopItem
         if (player.Credits() < Price()) return BuyResult.NotEnoughCredits;
         if (player.PlayerRole() != Role.Detective) return BuyResult.IncorrectRole;
         player.RemoveCredits(Price());
-        player.Player().GiveNamedItem(CsItem.AWP);
+        player.Player()?.GiveNamedItem(CsItem.AWP);
         return BuyResult.Successful;
     }
 }

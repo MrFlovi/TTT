@@ -51,20 +51,20 @@ public class InfoManager
     public void OnTickScoreboard()
     {
         return;
-        foreach (var player in _roleService.GetPlayers().Keys)
-        {
-            player.ModifyScoreBoard();
-        }
+        // foreach (CCSPlayerController player in _roleService.GetPlayers().Keys)
+        // {
+        //     player.ModifyScoreBoard();
+        // }
     }
     
 
     [GameEventHandler]
     private HookResult OnPlayerSpectateChange(EventSpecTargetUpdated @event, GameEventInfo info)
     {
-        var player = @event.Userid;
-        var target = new CCSPlayerController(@event.Target);
+        CCSPlayerController? player = @event.Userid;
+        CCSPlayerController target = new CCSPlayerController(@event.Target);
 
-        if (!player.IsReal() || !target.IsReal()) return HookResult.Continue;
+        if (player == null || !player.IsReal() || !target.IsReal()) return HookResult.Continue;
         
         _spectatorLookAtRole.TryAdd(player, new Tuple<string, Role>(target.PlayerName, _roleService.GetRole(target)));
         

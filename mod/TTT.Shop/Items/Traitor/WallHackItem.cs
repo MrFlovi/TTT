@@ -24,6 +24,7 @@ public class WallHackItem : IShopItem
 
     public BuyResult OnBuy(GamePlayer player)
     {
+        
         return BuyResult.Successful;
     }
 }

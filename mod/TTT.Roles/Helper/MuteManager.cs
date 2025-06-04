@@ -42,20 +42,20 @@ public class MuteManager
     private void OnPlayerSpeak(int playerSlot)
     {
         var player = Utilities.GetPlayerFromSlot(playerSlot);
-        if (!player.IsReal())
+        if (player == null || !player.IsReal())
             return;
 
         if (!player.PawnIsAlive && !BypassMute(player))
         {
             // Normal players can't speak when dead
             Mute(player);
-            Server.NextFrame(() => player.PrintToCenter("You are dead and muted!"));
+            Server.NextFrame(() => player?.PrintToCenter("You are dead and muted!"));
             return;
         }
 
         if (IsMuted(player))
         {
-            Server.NextFrame(() => player.PrintToCenter("You are muted!"));
+            Server.NextFrame(() => player?.PrintToCenter("You are muted!"));
             return;
         }
     }

@@ -23,14 +23,14 @@ public class ModelHandler
     
     public static void SetModel(CCSPlayerController player, string modelPath)
     {
-        player.PlayerPawn.Value.SetModel(modelPath);
+        player.PlayerPawn.Value?.SetModel(modelPath);
     }
     
-    public static void SetModelNextServerFrame(CCSPlayerController playerPawn, string model)
+    public static void SetModelNextServerFrame(CCSPlayerController player, string model)
     {
         Server.NextFrame(() =>
         {
-            SetModel(playerPawn, model);
+            SetModel(player, model);
         });
     }
 }

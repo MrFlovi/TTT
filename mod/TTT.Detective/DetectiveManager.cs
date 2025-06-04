@@ -27,7 +27,7 @@ public class DetectiveManager : IDetectiveService, IPluginBehavior
     {
         parent.RegisterListener<Listeners.OnTick>(() =>
         {
-            foreach (var player in Utilities.GetPlayers().Where(player => player.IsValid && player.IsReal())
+            foreach (CCSPlayerController player in Utilities.GetPlayers().Where(player => player.IsValid && player.IsReal())
                          .Where(player => (player.Buttons & PlayerButtons.Use) != 0)) OnPlayerUse(player);
         });
 
@@ -38,21 +38,21 @@ public class DetectiveManager : IDetectiveService, IPluginBehavior
 
     private HookResult OnZeus(DynamicHook hook)
     {
-            var ent = hook.GetParam<CBaseEntity>(0);
+            CBaseEntity ent = hook.GetParam<CBaseEntity>(0);
 
-            var playerWhoWasDamaged = player(ent);
+            CCSPlayerController? playerWhoWasDamaged = player(ent);
 
             if (playerWhoWasDamaged == null) return HookResult.Continue;
                  
-            var info = hook.GetParam<CTakeDamageInfo>(1);
+            CTakeDamageInfo info = hook.GetParam<CTakeDamageInfo>(1);
             
             CCSPlayerController? attacker = null;
             
             if (info.Attacker.Value != null)
             {
-                var playerWhoAttacked = info.Attacker.Value.As<CCSPlayerPawn>();
+                CCSPlayerPawn playerWhoAttacked = info.Attacker.Value.As<CCSPlayerPawn>();
 
-                attacker = playerWhoAttacked.Controller.Value.As<CCSPlayerController>();   
+                attacker = playerWhoAttacked.Controller.Value?.As<CCSPlayerController>();   
                 
             }
 
@@ -61,13 +61,24 @@ public class DetectiveManager : IDetectiveService, IPluginBehavior
                 
             info.Damage = 0;
                 
-            var targetRole = _roleService.GetPlayer(playerWhoWasDamaged);
+            GamePlayer targetRole = _roleService.GetPlayer(playerWhoWasDamaged);
             
             Server.NextFrame(() =>
             {
-                attacker.PrintToChat(
-                    StringUtils.FormatTTT(
-                        $"You tased player {playerWhoWasDamaged.PlayerName} they are a {targetRole.PlayerRole().FormatRoleFull()}"));
+                if (attacker != null)
+                {
+                    if (_roleService.GetPlayer(attacker).PlayerRole() != Role.Detective)
+                    {
+                        attacker.PrintToChat(
+                            StringUtils.FormatTTT(
+                                $"Only a Detective can use this."));
+                    } else {
+                        attacker.PrintToChat(
+                            StringUtils.FormatTTT(
+                                $"You tased player {playerWhoWasDamaged.PlayerName} they are a {targetRole.PlayerRole().FormatRoleFull()}"));
+                    
+                    }
+                }
             });
             
             //_roundService.GetLogsService().AddLog(new MiscAction("tased player " + targetRole.PlayerRole().FormatStringFullAfter(playerWhoWasDamaged.PlayerName), attacker));
@@ -86,21 +97,21 @@ public class DetectiveManager : IDetectiveService, IPluginBehavior
 
        if (_roleService.GetRole(caller) != Role.Detective) return;
 
-        var entity = caller.GetClientRagdollAimTarget();
+       CCSPlayerController? entity = caller.GetClientRagdollAimTarget();
 
         if (entity == null) return;
         
-        if (entity.PawnIsAlive) return;
+        // if (entity.PawnIsAlive) return;
         
-        var player = _roleService.GetPlayer(entity);
+        GamePlayer player = _roleService.GetPlayer(entity);
 
         if (player.IsFound()) return;
         
-        var killerEntity= player.Killer();
+        CCSPlayerController? killerEntity= player.Killer();
         
         string message;
 
-        var plr = player.Player();
+        CCSPlayerController? plr = player.Player();
         if (plr == null) return;
 
         if (killerEntity == null || !killerEntity.IsReal())
@@ -130,24 +141,18 @@ public class DetectiveManager : IDetectiveService, IPluginBehavior
         }
 
         // grab the pawn index
-        int player_index = (int)instance.Index;
-
+        int playerIndex = (int)instance.Index;
+        
         // grab player controller from pawn
-        CCSPlayerPawn player_pawn = Utilities.GetEntityFromIndex<CCSPlayerPawn>(player_index);
+        CCSPlayerPawn? playerPawn = Utilities.GetEntityFromIndex<CCSPlayerPawn>(playerIndex);
 
-        // pawn valid
-        if (player_pawn == null || !player_pawn.IsValid)
-        {
-            return null;
-        }
-
-        // controller valid
-        if (player_pawn.OriginalController == null || !player_pawn.OriginalController.IsValid)
+        // pawn and controller valid
+        if (playerPawn == null || !playerPawn.IsValid || !playerPawn.OriginalController.IsValid)
         {
             return null;
         }
 
         // any further validity is up to the caller
-        return player_pawn.OriginalController.Value;
+        return playerPawn.OriginalController.Value;
     }
 }

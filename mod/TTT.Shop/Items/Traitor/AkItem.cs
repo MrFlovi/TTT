@@ -29,7 +29,7 @@ public class AkItem : IShopItem
         if (player.PlayerRole() != Role.Traitor) return BuyResult.IncorrectRole;
         player.RemoveCredits(Price());
         var playerObject = player.Player();
-        playerObject.GiveNamedItem(CsItem.AK47);
+        playerObject?.GiveNamedItem(CsItem.AK47);
         return BuyResult.Successful;
     }
 }

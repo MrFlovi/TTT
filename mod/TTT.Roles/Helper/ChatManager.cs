@@ -17,26 +17,26 @@ public class ChatManager(IRoleService roleService) : IPluginBehavior
     private HookResult OnSayTeam(CCSPlayerController? caller, CommandInfo info)
     {
         if (caller == null || !caller.IsValid) return HookResult.Continue;
-        var role = roleService.GetRole(caller);
+        Role role = roleService.GetRole(caller);
         switch (role)
         {
             case Role.Innocent:
                 return HookResult.Stop;
             case Role.Detective:
             {
-                var message = $" {ChatColors.DarkBlue} DETECTIVE {caller.PlayerName} {info.GetArg(1)}";
-                foreach (var player in roleService.GetDetectives())
+                string message = $" {ChatColors.DarkBlue} DETECTIVE {caller.PlayerName} {info.GetArg(1)}";
+                foreach (CCSPlayerController? player in roleService.GetDetectives())
                 {
-                    player.PrintToChat(message);
+                    player?.PrintToChat(message);
                 }
                 break;
             }
             case Role.Traitor:
             {
-                var message = $" {ChatColors.DarkRed} TRAITOR {caller.PlayerName} {info.GetArg(1)}";
-                foreach (var player in roleService.GetTraitors())
+                string message = $" {ChatColors.DarkRed} TRAITOR {caller.PlayerName} {info.GetArg(1)}";
+                foreach (CCSPlayerController? player in roleService.GetTraitors())
                 {
-                    player.PrintToChat(message);
+                    player?.PrintToChat(message);
                 }
                 break;
             }

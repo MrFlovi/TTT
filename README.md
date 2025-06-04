@@ -2,8 +2,11 @@
 A gmod inspired Trouble in Terrorist Town plugin for CS2
 
 ## Noteworthy features
-* The detective gets a taser (Zeus), which upon use on a player, reveals their role
-* Traitors can use team chat to privately communicate with each other
+* The detective gets a taser (Zeus), which upon use on a player, reveals their role.
+
+[//]: # (* The Detective can press 'use' on a body to identify who killed them.)
+* Traitors can use team chat to privately communicate with each other.
+
 
 
 [//]: # (## Items & Shop)
@@ -45,6 +48,11 @@ A gmod inspired Trouble in Terrorist Town plugin for CS2
 [//]: # (### Console)
 
 [//]: # (* `css_roles` = Get the roles of all players)
+
+[//]: # (* `ttt_reloadconfig` = Reload the TTT config)
+
+## Configuration
+There are a number of fields in the config that can be set. Execute the `ttt_reloadconfig` command to make changes during runtime.
 
 ## Contributing
 TTT is in heavy development and I want you to know that contributions are always welcome. Please follow Microsoft's dependency injection system.

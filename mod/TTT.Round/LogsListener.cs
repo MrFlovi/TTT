@@ -9,7 +9,7 @@ using TTT.Public.Mod.Role;
 
 namespace TTT.Round;
 
-public class LogsListener : ILogsService
+public class LogsListener : ILogsService, IPluginBehavior
 {
     private readonly HashSet<IAction> _actions = new();
     private readonly IRoleService _roleService;
@@ -21,7 +21,11 @@ public class LogsListener : ILogsService
         _roundId = roundId;
         parent.RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
         parent.RegisterEventHandler<EventPlayerHurt>(OnPlayerDamage);
-        parent.RegisterEventHandler<EventPlayerDeath>(OnPlayerDeath);
+    }
+    
+    public void Start(BasePlugin plugin)
+    {
+        plugin.RegisterEventHandler<EventPlayerDeath>(OnPlayerDeath);
     }
 
     public void IncrementRound()
@@ -42,14 +46,14 @@ public class LogsListener : ILogsService
     [GameEventHandler]
     private HookResult OnPlayerDeath(EventPlayerDeath @event, GameEventInfo info)
     {
-        var killer = @event.Attacker;
-        var deadPlayer = @event.Userid;
+        CCSPlayerController? killer = @event.Attacker;
+        CCSPlayerController? victim = @event.Userid;
         
-        if (killer == null || deadPlayer == null) return HookResult.Continue;
-        if (!killer.IsReal() || !deadPlayer.IsReal()) return HookResult.Continue;
+        if (killer == null || victim == null) return HookResult.Continue;
+        if (!killer.IsReal() || !victim.IsReal()) return HookResult.Continue;
         
         _actions.Add(new KillAction(new Tuple<CCSPlayerController, Role>(killer, _roleService.GetRole(killer)),
-            new Tuple<CCSPlayerController, Role>(deadPlayer, _roleService.GetRole(deadPlayer))
+            new Tuple<CCSPlayerController, Role>(victim, _roleService.GetRole(victim))
         ));
         return HookResult.Continue;
     }
@@ -78,10 +82,12 @@ public class LogsListener : ILogsService
     [GameEventHandler]
     private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
     {
+        if (Utilities.GetPlayers().Count(player => player.PawnIsAlive) < 1) return HookResult.Continue;
+        
         var chatMessage = CreateChatMessage();
         
         foreach (var player in Utilities.GetPlayers().Where(player => player.IsValid).Where(player => player.IsReal() && !player.IsBot)
-                     .ToList()) Server.NextFrame(() => player.PrintToConsole(chatMessage));
+                     .ToList()) Server.NextFrame(() => player?.PrintToConsole(chatMessage));
         
         Server.PrintToConsole(chatMessage);
 

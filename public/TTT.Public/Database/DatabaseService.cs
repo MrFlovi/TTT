@@ -38,18 +38,22 @@ public class DatabaseService
     {
         var id = player.SteamID;
 
-        Task.Run(async () =>
+        var task = Task.Run(async () =>
         {
             var command = new MySqlCommand("INSERT IGNORE INTO PlayerData(steamid, kills, deaths, karma, traitor_kills, traitors_killed)" +
                                            $" VALUES ({id}, 0, 0, 80, 0, 0);");
             command.Connection = _connector;
             await command.ExecuteNonQueryAsync();
         });
+        if (player.UserId == null) return new GamePlayer(Role.Unassigned, 0, 0, -1); // Closest to a null check ig
         return new GamePlayer(Role.Unassigned, 800, 0, player.UserId.Value);
     }
 
     public void UpdatePlayer(GamePlayer player)
     {
+        CCSPlayerController? controller = player.Player();
+        if (controller == null) return;
+        
         Task.Run(async () =>
         {
             var command = new MySqlCommand("UPDATE PlayerData SET kills = @kills, deaths = @deaths, karma = @karma, traitor_kills = @traitor_kills, traitors_killed = @traitors_killed" +
@@ -59,7 +63,7 @@ public class DatabaseService
             command.Parameters.AddWithValue("@karma", player.Karma());
             command.Parameters.AddWithValue("@traitor_kills", 0);
             command.Parameters.AddWithValue("@traitors_killed", 0);
-            command.Parameters.AddWithValue("@steamid", player.Player().SteamID);
+            command.Parameters.AddWithValue("@steamid", controller.SteamID);
             command.Connection = _connector;
             await command.ExecuteNonQueryAsync();
         });

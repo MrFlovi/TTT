@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using TTT.Player;
 using TTT.Public.Behaviors;
 using TTT.Public.Mod.Role;
 using TTT.Public.Mod.Round;
@@ -10,13 +11,15 @@ namespace TTT.Roles;
 
 public class RDMListener(IRoleService roleService) : IPluginBehavior
 {
+    private BasePlugin _plugin;
     public void Start(BasePlugin plugin)
     {
-        plugin.RegisterEventHandler<EventPlayerDeath>(OnPlayerKill);
+        _plugin = plugin;
+        plugin.RegisterEventHandler<EventPlayerDeath>(OnPlayerDeath);
     }
 
     [GameEventHandler]
-    private HookResult OnPlayerKill(EventPlayerDeath @event, GameEventInfo info)
+    private HookResult OnPlayerDeath(EventPlayerDeath @event, GameEventInfo info)
     {
         var attacker = @event.Attacker;
         var killedPlayer = @event.Userid;
@@ -28,8 +31,12 @@ public class RDMListener(IRoleService roleService) : IPluginBehavior
         
         if (attackerRole == Role.Traitor && killedRole != Role.Traitor) return HookResult.Continue;
         if (killedRole == Role.Traitor) return HookResult.Continue;
+
+        GamePlayer attackerPlayer = roleService.GetPlayer(attacker);
+        attackerPlayer.RemoveKarma();
         
-        roleService.GetPlayer(attacker).RemoveKarma();
+        attacker.CommitSuicide(true, true);
+        attackerPlayer.SetKiller(attacker);
         
         return HookResult.Continue;
     }

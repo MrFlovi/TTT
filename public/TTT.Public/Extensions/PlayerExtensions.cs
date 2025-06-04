@@ -19,13 +19,13 @@ public static class PlayerExtensions
 
     public static CCSPlayerController? GetClientPlayerAimTarget(this CCSPlayerController player)
     {
-        var GameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").FirstOrDefault()?.GameRules;
+        CCSGameRules? GameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").FirstOrDefault()?.GameRules;
 
         if (GameRules is null)
             return null;
 
         VirtualFunctionWithReturn<IntPtr, IntPtr, IntPtr> findPickerEntity = new(GameRules.Handle, 28);
-        var target = new CBaseEntity(findPickerEntity.Invoke(GameRules.Handle, player.Handle));
+        CBaseEntity target = new CBaseEntity(findPickerEntity.Invoke(GameRules.Handle, player.Handle));
 
         if (target.DesignerName is "player")
         {
@@ -38,13 +38,13 @@ public static class PlayerExtensions
     
     public static CCSPlayerController? GetClientRagdollAimTarget(this CCSPlayerController player)
     {
-        var GameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").FirstOrDefault()?.GameRules;
+        CCSGameRules? GameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").FirstOrDefault()?.GameRules;
 
         if (GameRules is null)
             return null;
 
         VirtualFunctionWithReturn<IntPtr, IntPtr, IntPtr> findPickerEntity = new(GameRules.Handle, 28);
-        var target = new CBaseEntity(findPickerEntity.Invoke(GameRules.Handle, player.Handle));
+        CBaseEntity target = new CBaseEntity(findPickerEntity.Invoke(GameRules.Handle, player.Handle));
 
         if (target.DesignerName is "player")
         {

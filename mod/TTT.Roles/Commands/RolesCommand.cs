@@ -15,12 +15,12 @@ namespace TTT.Roles.Commands;
 public class RolesCommand : IPluginBehavior
 {
     private readonly IRoleService _roleService;
-    private readonly IRoundService _roundService;
+    //private readonly IRoundService _roundService;
 
-    public RolesCommand(IRoleService roleService, IRoundService roundService)
+    public RolesCommand(IRoleService roleService/*, IRoundService roundService*/)
     {
         _roleService = roleService;
-        _roundService = roundService;
+        //_roundService = roundService;
     }
     
     [ConsoleCommand("css_roles", "Get the roles of all players")]
@@ -29,11 +29,11 @@ public class RolesCommand : IPluginBehavior
     {
         if (!AdminManager.PlayerHasPermissions(player, "@css/kick")) return;
 
-        if (_roundService.GetRoundStatus() != RoundStatus.Started)
+        /*if (_roundService.GetRoundStatus() != RoundStatus.Started)
         {
             command.ReplyToCommand(StringUtils.FormatTTT("The round has not started yet."));
             return;
-        }
+        }*/
         
         StringBuilder sb = new();
 
@@ -41,7 +41,7 @@ public class RolesCommand : IPluginBehavior
         
         foreach (var gamePlayer in _roleService.Players())
         {
-            var plr = gamePlayer.Player();
+            CCSPlayerController? plr = gamePlayer.Player();
             if (plr == null) continue;
             sb.AppendLine(StringUtils.FormatTTT(gamePlayer.PlayerRole().FormatStringAfter(plr.PlayerName)));
         }
