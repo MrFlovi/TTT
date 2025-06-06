@@ -68,6 +68,8 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
         
         foreach (CCSPlayerController controller in Utilities.GetPlayers())
         {
+            controller.SwitchTeam(CsTeam.Terrorist);
+            
             CCSPlayerPawn? pawn = controller.PlayerPawn.Value;
             if (pawn == null) continue;
             
@@ -297,9 +299,13 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
         }
 
         AddInnocents(eligible);
-        _entityGlowManager?.SetPlayersGlow(GetTraitors().ToList(), EntityGlowManager.TraitorGlowColor);
-        _entityGlowManager?.SetPlayersGlow(GetInnocents().ToList(), EntityGlowManager.InnocentGlowColor);
-        _entityGlowManager?.SetPlayersGlow(GetDetectives().ToList(), EntityGlowManager.DetectiveGlowColor);
+        
+        Server.RunOnTick(5, () =>
+        {
+            _entityGlowManager?.SetPlayersGlow(GetTraitors().ToList(), EntityGlowManager.TraitorGlowColor);
+            _entityGlowManager?.SetPlayersGlow(GetInnocents().ToList(), EntityGlowManager.InnocentGlowColor);
+            _entityGlowManager?.SetPlayersGlow(GetDetectives().ToList(), EntityGlowManager.DetectiveGlowColor);
+        });
     }
 
     public HashSet<CCSPlayerController?> GetTraitors()

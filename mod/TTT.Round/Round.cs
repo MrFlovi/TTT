@@ -29,7 +29,7 @@ public class Round
             .Where(player => player.IsReal())
             .ToList();
         
-        var formattedColor = $"<font color=\"#{Color.Green.R:X2}{Color.Green.G:X2}{Color.Green.B:X2}\">";
+        var formattedColor = $"<font color=\"#{Color.Yellow.R:X2}{Color.Yellow.G:X2}{Color.Yellow.B:X2}\">";
         
         foreach (var player in players)
         {

@@ -9,9 +9,9 @@ namespace TTT.Roles;
 public class EntityGlowManager
 {
     private IRoleService _roleService;
-    
+
     public static Color TraitorGlowColor = Color.Red, DetectiveGlowColor = Color.Blue, InnocentGlowColor = Color.Lime;
-    
+
     private List<CBaseModelEntity> _glowingEntities = new();
 
     public EntityGlowManager(BasePlugin plugin, IRoleService roleService)
@@ -32,12 +32,12 @@ public class EntityGlowManager
     private void RemoveGlow(CCheckTransmitInfoList infoList)
     {
         HashSet<CCSPlayerController?> traitors = _roleService.GetTraitors();
-            
+
         foreach (var (info, player) in infoList)
         {
             if (player == null)
                 continue;
-            
+
             foreach (var model in _glowingEntities)
             {
                 if (model.Handle == IntPtr.Zero) continue;
@@ -45,39 +45,44 @@ public class EntityGlowManager
                 if (model?.Glow?.GlowColorOverride == null) continue;
 
                 Color color = model.Glow.GlowColorOverride;
-                
-                // Dead players can see everyone's role glow
-                if (!player.PawnIsAlive) continue;
-                
+
                 // All players see the Detectives glow
-                if (color.ToArgb().Equals(DetectiveGlowColor.ToArgb())) continue;
-                
+                if (color.ToArgb().Equals(DetectiveGlowColor.ToArgb()))
+                {
+                    continue;
+                }
+
                 if (traitors.Contains(player))
                 {
-                    if (_roleService.GetPlayer(player).HasItem("wallhack") || color.ToArgb().Equals(TraitorGlowColor.ToArgb()))
+                    if (_roleService.GetPlayer(player).HasItem("wallhack") ||
+                        color.ToArgb().Equals(TraitorGlowColor.ToArgb()))
                     {
                         continue;
                     }
                 }
                 
+                // Dead players can see everyone's role glow
+                if (!player.PawnIsAlive) continue;
+
                 info.TransmitEntities.Remove(model);
             }
         }
     }
-    
+
     public void Dispose()
     {
         List<CBaseModelEntity> entities = _glowingEntities;
-        
+
         Console.WriteLine("Remove entities now");
         foreach (var entity in _glowingEntities)
         {
-            entity.Remove();
+            if(entity.IsValid) entity.Remove();
         }
+
         Console.WriteLine("Done removing entities now");
-        
+
         _glowingEntities.Clear();
-        
+
         entities.Clear();
     }
 
@@ -106,10 +111,12 @@ public class EntityGlowManager
         modelGlow.Glow.GlowTeam = -1;
         modelGlow.Glow.GlowType = 3;
         modelGlow.Glow.GlowRangeMin = 100;
-
+        
         modelRelay.AcceptInput("FollowEntity", pawn, modelRelay, "!activator");
+        modelRelay.Teleport(pawn.AbsOrigin, pawn.AbsRotation, pawn.AbsVelocity);
         modelGlow.AcceptInput("FollowEntity", modelRelay, modelGlow, "!activator");
-
+        modelGlow.Teleport(pawn.AbsOrigin, pawn.AbsRotation, pawn.AbsVelocity);
+        
         _glowingEntities.Add(modelGlow);
         _glowingEntities.Add(modelRelay);
     }

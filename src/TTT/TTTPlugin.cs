@@ -1,8 +1,10 @@
 ﻿using System.Collections.Immutable;
 using System.ComponentModel.Design.Serialization;
+using System.Data;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Extensions;
+using CounterStrikeSharp.API.Modules.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TTT.Public.Behaviors;
@@ -58,7 +60,30 @@ public class TTTPlugin : BasePlugin
             Logger.LogInformation("[TTT] Loaded behavior {@Behavior}", extension.GetType().FullName);
         }
 
+        RegisterListener<Listeners.OnTick>(OnTick);
+
         base.Load(hotReload);
+    }
+
+    public void OnTick()
+    {
+        foreach (CCSPlayerController player in Utilities.GetPlayers())
+        {
+            CCSPlayerPawn? pawn = player.PlayerPawn.Value;
+            if (pawn == null) continue;
+            
+            pawn.EntitySpottedState.Spotted = false;
+            Utilities.SetStateChanged(pawn, "CCSPlayerPawn", "m_entitySpottedState", Schema.GetSchemaOffset("EntitySpottedState_t", "m_bSpotted"));
+             
+            Span<uint> spottedByMask = pawn.EntitySpottedState.SpottedByMask;
+            for (int i = 0; i < spottedByMask.Length; i++)
+            { 
+                spottedByMask[i] = 0;
+            }
+             
+            Utilities.SetStateChanged(pawn, "CCSPlayerPawn", "m_entitySpottedState", Schema.GetSchemaOffset("EntitySpottedState_t", "m_bSpottedByMask"));
+        }
+        
     }
 
     /// <inheritdoc />
