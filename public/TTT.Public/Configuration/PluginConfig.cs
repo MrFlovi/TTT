@@ -23,7 +23,9 @@ public class PluginConfig : BasePluginConfig, IPluginConfig<PluginConfig>, IPlug
     [JsonPropertyName("block_suicide")] public bool BlockSuicide { get; set; } = false;
     
     [JsonPropertyName("announce_deaths")] public bool AnnounceDeaths { get; set; } = false;
-    [JsonPropertyName("know_role_of_victim")] public bool KnowRoleOfVictim { get; set; } = false;
+    [JsonPropertyName("know_role_of_victim")] public bool KnowRoleOfVictim { get; set; } = false; // this setting is only visual, you can always make role out, due to glow, or changes in money
+    [JsonPropertyName("suicide_on_rdm")] public bool SuicideOnRDM { get; set; } = false;
+    [JsonPropertyName("clear_money_on_rdm")] public bool ClearMoneyOnRDM { get; set; } = false;
 
     [JsonPropertyName("starting_secondary")]
     public string StartingSecondary { get; set; } = "weapon_glock";

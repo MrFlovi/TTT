@@ -101,20 +101,25 @@ public class GamePlayer : IInventory
     public void AddCredits(long increment)
     {
         _credits += increment;
-        //Player().InGameMoneyServices!.Account += (int) increment;
-        //Utilities.SetStateChanged(Player(), "CCSPlayerController", "m_pInGameMoneyServices");
+        Player()!.InGameMoneyServices!.Account += (int) increment;
+        Utilities.SetStateChanged(Player()!, "CCSPlayerController", "m_pInGameMoneyServices");
     }
 
     public void RemoveCredits(long decrement)
     {
         _credits -= decrement;
-        //Player().InGameMoneyServices!.Account -= (int) decrement;
-        //Utilities.SetStateChanged(Player(), "CCSPlayerController", "m_pInGameMoneyServices");
+        Player()!.InGameMoneyServices!.Account = Math.Max(0, Player()!.InGameMoneyServices!.Account - (int) decrement);
+        Utilities.SetStateChanged(Player()!, "CCSPlayerController", "m_pInGameMoneyServices");
     }
 
     public void ResetCredits()
     {
         _credits = 500; 
+    }
+    
+    public void ResetItems()
+    {
+        _items.Clear();
     }
 
     public CCSPlayerController? Killer()

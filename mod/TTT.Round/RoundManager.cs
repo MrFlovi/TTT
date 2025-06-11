@@ -31,10 +31,7 @@ public class RoundManager : IRoundService
         
         plugin.AddCommandListener("jointeam", (player, info) =>
         {
-            if (_roundStatus != RoundStatus.Started) return HookResult.Continue;
-            if (player == null) return HookResult.Continue;
-            if (!player.IsReal()) return HookResult.Continue;
-            if (_roleService.GetRole(player) != Role.Unassigned) return HookResult.Continue;
+            if (_roundStatus != RoundStatus.Started || player == null || !player.IsReal() || _roleService.GetRole(player) != Role.Unassigned) return HookResult.Continue;
             Server.NextFrame(() => player?.CommitSuicide(false, true));
 
             return HookResult.Continue;
@@ -42,7 +39,9 @@ public class RoundManager : IRoundService
         
         VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(hook =>
         {
-            if (hook.GetParam<CEntityInstance>(0).DesignerName is not "player") return HookResult.Continue;
+            var ent = hook.GetParam<CEntityInstance>(0);
+            
+            if (!ent.IsValid || ent.DesignerName is not "player") return HookResult.Continue;
             return _roundStatus != RoundStatus.Waiting ? HookResult.Continue : HookResult.Stop;
         }, HookMode.Pre);
         
@@ -54,7 +53,7 @@ public class RoundManager : IRoundService
             {
                 foreach (CCSPlayerController? controller in _roleService.GetTraitors())
                 {
-                    if (controller == null) continue;
+                    if (controller == null || controller.IsReal()) continue;
                     
                     _roleService.GetPlayer(controller).AddItem(new WallHackItem());
                 }
@@ -119,7 +118,7 @@ public class RoundManager : IRoundService
         if (_round.GraceTime() != 0) return;
         
         
-        if (Utilities.GetPlayers().Where(player => player is { IsValid: true, PawnIsAlive: true }).ToList().Count <= 2)
+        if (Utilities.GetPlayers().Where(player => player is { IsValid: true, PawnIsAlive: true } && player.IsReal()).ToList().Count <= 2)
         {
             Server.PrintToChatAll(StringUtils.FormatTTT("Not enough players to start the round. Round has been ended."));
             _roundStatus = RoundStatus.Paused;

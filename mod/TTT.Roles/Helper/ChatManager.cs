@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
 using TTT.Public.Behaviors;
+using TTT.Public.Extensions;
 using TTT.Public.Mod.Role;
 using TTT.Public.Player;
 
@@ -16,7 +17,7 @@ public class ChatManager(IRoleService roleService) : IPluginBehavior
 
     private HookResult OnSayTeam(CCSPlayerController? caller, CommandInfo info)
     {
-        if (caller == null || !caller.IsValid) return HookResult.Continue;
+        if (caller == null || !caller.IsReal()) return HookResult.Continue;
         Role role = roleService.GetRole(caller);
         switch (role)
         {

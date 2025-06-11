@@ -86,7 +86,7 @@ public class LogsListener : ILogsService, IPluginBehavior
         
         var chatMessage = CreateChatMessage();
         
-        foreach (var player in Utilities.GetPlayers().Where(player => player.IsValid).Where(player => player.IsReal() && !player.IsBot)
+        foreach (var player in Utilities.GetPlayers().Where(player => player.IsReal() && !player.IsBot)
                      .ToList()) Server.NextFrame(() => player?.PrintToConsole(chatMessage));
         
         Server.PrintToConsole(chatMessage);

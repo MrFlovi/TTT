@@ -25,7 +25,6 @@ public class Round
         _graceTime--;
         
         var players = Utilities.GetPlayers()
-            .Where(player => player.IsValid)
             .Where(player => player.IsReal())
             .ToList();
         

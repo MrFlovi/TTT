@@ -52,7 +52,7 @@ public class CreditManager : IPluginBehavior
             return HookResult.Continue;
         }
         
-        attackerPlayer.RemoveCredits(500);
+        attackerPlayer.RemoveCredits(2000);
         
         return HookResult.Continue;
     }

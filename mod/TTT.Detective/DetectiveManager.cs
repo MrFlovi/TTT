@@ -27,28 +27,28 @@ public class DetectiveManager : IDetectiveService, IPluginBehavior
     {
         parent.RegisterListener<Listeners.OnTick>(() =>
         {
-            foreach (CCSPlayerController player in Utilities.GetPlayers().Where(player => player.IsValid && player.IsReal())
+            foreach (CCSPlayerController player in Utilities.GetPlayers().Where(player => player.IsReal())
                          .Where(player => (player.Buttons & PlayerButtons.Use) != 0)) OnPlayerUse(player);
         });
 
         VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnZeus, HookMode.Pre);
-
     }
-
-
+    
     private HookResult OnZeus(DynamicHook hook)
     {
             CBaseEntity ent = hook.GetParam<CBaseEntity>(0);
+            if (ent == null || !ent.IsValid) return HookResult.Continue;
 
             CCSPlayerController? playerWhoWasDamaged = player(ent);
 
             if (playerWhoWasDamaged == null) return HookResult.Continue;
                  
             CTakeDamageInfo info = hook.GetParam<CTakeDamageInfo>(1);
+            if (info == null || info.Handle == IntPtr.Zero) return HookResult.Continue;
             
             CCSPlayerController? attacker = null;
             
-            if (info.Attacker.Value != null)
+            if (info.Attacker.Value != null && info.Attacker.Value.Handle != IntPtr.Zero)
             {
                 CCSPlayerPawn playerWhoAttacked = info.Attacker.Value.As<CCSPlayerPawn>();
 
@@ -57,7 +57,6 @@ public class DetectiveManager : IDetectiveService, IPluginBehavior
             }
 
             if (info.BitsDamageType != DamageTypes_t.DMG_SHOCK) return HookResult.Continue;
-            if (attacker == null) return HookResult.Continue;
                 
             info.Damage = 0;
                 
@@ -65,7 +64,7 @@ public class DetectiveManager : IDetectiveService, IPluginBehavior
             
             Server.NextFrame(() =>
             {
-                if (attacker != null)
+                if (attacker != null && attacker.IsReal())
                 {
                     if (_roleService.GetPlayer(attacker).PlayerRole() != Role.Detective)
                     {

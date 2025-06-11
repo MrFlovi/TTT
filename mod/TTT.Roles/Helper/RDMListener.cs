@@ -1,11 +1,13 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using McMaster.NETCore.Plugins;
 using TTT.Player;
 using TTT.Public.Behaviors;
 using TTT.Public.Mod.Role;
 using TTT.Public.Mod.Round;
 using TTT.Round;
+using PluginConfig = TTT.Public.Configuration.PluginConfig;
 
 namespace TTT.Roles;
 
@@ -34,9 +36,19 @@ public class RDMListener(IRoleService roleService) : IPluginBehavior
 
         GamePlayer attackerPlayer = roleService.GetPlayer(attacker);
         attackerPlayer.RemoveKarma();
+
+        if (PluginConfig.TttConfig.SuicideOnRDM)
+        {
+            attacker.CommitSuicide(true, true);
+            attackerPlayer.SetKiller(attacker);
+        }
+
+        if (PluginConfig.TttConfig.ClearMoneyOnRDM)
+        {
+            attacker.InGameMoneyServices!.Account = 0;
+            Utilities.SetStateChanged(attacker, "CCSPlayerController", "m_pInGameMoneyServices");
+        }
         
-        attacker.CommitSuicide(true, true);
-        attackerPlayer.SetKiller(attacker);
         
         return HookResult.Continue;
     }

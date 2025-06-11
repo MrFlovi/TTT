@@ -51,6 +51,8 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
         parent.RegisterEventHandler<EventPlayerDeath>(OnPlayerDeath, HookMode.Pre);
         //parent.RegisterEventHandler<EventPlayerDeath>(OnAfterPlayerDeath);
         parent.RegisterEventHandler<EventPlayerHurt>(OnPlayerDamage, HookMode.Pre);
+        
+        parent.RegisterEventHandler<EventItemPurchase>(OnItemPurchase);
     }
     
     public void SetMoveType(CCSPlayerController? player, MoveType_t moveType)
@@ -61,6 +63,11 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
         Utilities.SetStateChanged(player.PlayerPawn.Value, "CBaseEntity", "m_MoveType");
     }
 
+    public HookResult OnItemPurchase(EventItemPurchase @event, GameEventInfo info)
+    {
+        return HookResult.Continue;
+    }
+    
     [GameEventHandler]
     private HookResult OnRoundPrepare(EventRoundPrestart @event, GameEventInfo info)
     {
@@ -240,7 +247,7 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
         if (Utilities.GetPlayers().Count(player => player.PawnIsAlive) < 1) return HookResult.Continue;
         
         var players = Utilities.GetPlayers()
-            .Where(player => player.IsValid).Where(player => player.IsReal() && !player.IsBot).ToList();
+            .Where(player => player.IsReal() && !player.IsBot).ToList();
 
         Server.PrintToChatAll(StringUtils.FormatTTT(GetWinner().FormatStringFullAfter(" team has won!")));
         foreach (var player in players)
