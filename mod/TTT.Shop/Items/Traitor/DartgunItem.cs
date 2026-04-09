@@ -5,32 +5,31 @@ using TTT.Public.Shop;
 
 namespace TTT.Shop.Items.Traitor;
 
-public class AkItem : IShopItem
+public class DartgunItem : IShopItem
 {
     public string Name()
     {
-        return "AK-47";
+        return "Dart Gun";
     }
 
     public string SimpleName()
     {
-        //css_buy ak47
-        return "ak47";
+        return "dartgun";
     }
-
+    
     public string? WeaponName()
     {
-        return "weapon_ak47";
+        return "weapon_ssg08";
     }
     
     public string? Model()
     {
-        return "models\\weapon\\laserblaster\\laserblaster.vmdl";
+        return "models\\weapon\\dartgun.vmdl";
     }
-    
+
     public int Price()
     {
-        return 1;
+        return 2;
     }
 
     public BuyResult OnBuy(GamePlayer player)
@@ -38,8 +37,7 @@ public class AkItem : IShopItem
         if (player.Credits() < Price()) return BuyResult.NotEnoughCredits;
         if (player.PlayerRole() != Role.Traitor) return BuyResult.IncorrectRole;
         player.RemoveCredits(Price());
-        var playerObject = player.Player();
-        playerObject?.GiveNamedItem(CsItem.AK47);
+        player.Player()?.GiveNamedItem(CsItem.SSG08);
         return BuyResult.Successful;
     }
 }

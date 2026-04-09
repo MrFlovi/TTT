@@ -8,51 +8,43 @@ using TTT.Public.Player;
 
 namespace TTT.Roles.Shop;
 
-public class CreditManager : IPluginBehavior
+public class CreditManager(IRoleService roleService) : IPluginBehavior
 {
-    private readonly IPlayerService _playerService;
-
-    private CreditManager(BasePlugin plugin, IPlayerService playerService)
-    {
-        _playerService = playerService;
-    }
+    private BasePlugin _plugin;
     
     public void Start(BasePlugin plugin)
     {
-        plugin.RegisterEventHandler<EventPlayerDeath>(OnPlayerDeath);
-    }
-
-    public static void Register(BasePlugin parent, IPlayerService service)
-    {
-        new CreditManager(parent, service);
+        _plugin = plugin;
+        //plugin.RegisterEventHandler<EventPlayerDeath>(OnPlayerDeath);
     }
 
     [GameEventHandler]
     public HookResult OnPlayerDeath(EventPlayerDeath @event, GameEventInfo info)
     {
+        Console.WriteLine("CreditsManager Player Death Event triggered");
         CCSPlayerController? killer = @event.Attacker;
         CCSPlayerController? victim = @event.Userid;
         
         if (killer == null || victim == null) return HookResult.Continue;
         if (killer == victim) return HookResult.Continue;
         
-        var attackerPlayer = _playerService.GetPlayer(killer);
-        var victimPlayer = _playerService.GetPlayer(victim);
+        var attackerPlayer = roleService.GetPlayer(killer);
+        var victimPlayer = roleService.GetPlayer(victim);
         
         if (attackerPlayer.PlayerRole() == Role.Traitor && victimPlayer.PlayerRole() != Role.Traitor)
         {
-            if(victimPlayer.PlayerRole() == Role.Detective) attackerPlayer.AddCredits(500);
-            else attackerPlayer.AddCredits(250);
+            if(victimPlayer.PlayerRole() == Role.Detective) attackerPlayer.AddCredits(2);
+            else attackerPlayer.AddCredits(1);
             return HookResult.Continue;
         }
         
         if (attackerPlayer.PlayerRole() != Role.Traitor && victimPlayer.PlayerRole() == Role.Traitor)
         {
-            attackerPlayer.AddCredits(500);
+            attackerPlayer.AddCredits(2);
             return HookResult.Continue;
         }
         
-        attackerPlayer.RemoveCredits(2000);
+        attackerPlayer.RemoveCredits(100);
         
         return HookResult.Continue;
     }

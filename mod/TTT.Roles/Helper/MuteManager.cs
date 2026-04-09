@@ -42,7 +42,7 @@ public class MuteManager
     private void OnPlayerSpeak(int playerSlot)
     {
         var player = Utilities.GetPlayerFromSlot(playerSlot);
-        if (player == null || !player.IsReal())
+        if (!player.IsReal())
             return;
 
         if (!player.PawnIsAlive && !BypassMute(player))

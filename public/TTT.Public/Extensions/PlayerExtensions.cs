@@ -1,4 +1,5 @@
-﻿using CounterStrikeSharp.API;
+﻿using System.Diagnostics.CodeAnalysis;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -53,8 +54,9 @@ public static class PlayerExtensions
 
         return null;}
     
-    public static bool IsReal(this CCSPlayerController player)
+    public static bool IsReal([NotNullWhen(true)] this CCSPlayerController? player)
     {
+        if (player == null) return false;
         //  Do nothing else before this:
             //  Verifies the handle points to an entity within the global entity list.
         if (!player.IsValid)
@@ -65,6 +67,22 @@ public static class PlayerExtensions
 
         if (/*player.IsBot || */player.IsHLTV)
             return false;
+
+        return true;
+    }
+    
+    public static bool IsReal([NotNullWhen(true)] this CCSPlayerPawn? pawn)
+    {
+        if (pawn == null) return false;
+        //  Do nothing else before this:
+        //  Verifies the handle points to an entity within the global entity list.
+        if (!pawn.IsValid)
+            return false;
+
+        if (!pawn.OriginalController.IsValid) return false;
+
+        CCSPlayerController? player = pawn.OriginalController.Value;
+        if (!player.IsReal()) return false;
 
         return true;
     }

@@ -41,7 +41,7 @@ public class DetectiveManager : IDetectiveService, IPluginBehavior
 
             CCSPlayerController? playerWhoWasDamaged = player(ent);
 
-            if (playerWhoWasDamaged == null) return HookResult.Continue;
+            if (playerWhoWasDamaged == null || !playerWhoWasDamaged.IsReal()) return HookResult.Continue;
                  
             CTakeDamageInfo info = hook.GetParam<CTakeDamageInfo>(1);
             if (info == null || info.Handle == IntPtr.Zero) return HookResult.Continue;
@@ -64,7 +64,7 @@ public class DetectiveManager : IDetectiveService, IPluginBehavior
             
             Server.NextFrame(() =>
             {
-                if (attacker != null && attacker.IsReal())
+                if (attacker.IsReal())
                 {
                     if (_roleService.GetPlayer(attacker).PlayerRole() != Role.Detective)
                     {
@@ -113,7 +113,7 @@ public class DetectiveManager : IDetectiveService, IPluginBehavior
         CCSPlayerController? plr = player.Player();
         if (plr == null) return;
 
-        if (killerEntity == null || !killerEntity.IsReal())
+        if (!killerEntity.IsReal())
             message = StringUtils.FormatTTT(player.PlayerRole()
                 .FormatStringFullAfter($"{plr.PlayerName} was killed by world"));
         else

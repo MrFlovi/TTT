@@ -49,7 +49,6 @@ public class LogsListener : ILogsService, IPluginBehavior
         CCSPlayerController? killer = @event.Attacker;
         CCSPlayerController? victim = @event.Userid;
         
-        if (killer == null || victim == null) return HookResult.Continue;
         if (!killer.IsReal() || !victim.IsReal()) return HookResult.Continue;
         
         _actions.Add(new KillAction(new Tuple<CCSPlayerController, Role>(killer, _roleService.GetRole(killer)),
@@ -64,9 +63,7 @@ public class LogsListener : ILogsService, IPluginBehavior
         var killer = @event.Attacker;
         var deadPlayer = @event.Userid;
         var damage = @event.DmgHealth;
-
-        if (killer == null || deadPlayer == null) return HookResult.Continue;
-
+        
         if (!killer.IsReal() || !deadPlayer.IsReal()) return HookResult.Continue;
         //var hitbox = @event.Hitgroup; wip
 

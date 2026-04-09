@@ -103,12 +103,31 @@ public class AwpItem : IShopItem
 }
 ```
 
-## Road Map
-- [x] Role assignment
-- [x] DNA Scanner
-- [x] Tazer
-- [x] Configuration
-- [ ] Karma system
-- [ ] Shop
-- [ ] RDM Manager
-- [ ] Add database support for logs and stats
+[//]: # (## Old Road Map)
+
+[//]: # (- [x] Role assignment)
+
+[//]: # (- [x] DNA Scanner)
+
+[//]: # (- [x] Tazer)
+
+[//]: # (- [x] Configuration)
+
+[//]: # (- [ ] Karma system)
+
+[//]: # (- [x] Shop)
+
+[//]: # (- [x] RDM Manager)
+
+[//]: # (- [ ] Add database support for logs and stats)
+
+## CS2 Feature checklist
+- [x] Credits amount overhaul
+- [ ] Item: Neurotoxin (Traitor) & Medishot (All, drop in map, also cures neurotoxin)
+- [ ] Item: C4 (Traitor) & Insta-defuse (Detective) (plant anywhere, but maybe glow?)
+- [ ] Add physics props that can damage players
+- [ ] Item: Newton Launcher (Traitor) (If it's possible to create a custom item)
+- [ ] Item: Medi-station (Detective)
+- [ ] Item: UMP-prototype (Detective)
+- [ ] Item: Ender Pearls, idea src = https://www.youtube.com/watch?v=4bxb7gdMdLw (All) 
+- [ ] Add (config) feature to give each player a distinct color

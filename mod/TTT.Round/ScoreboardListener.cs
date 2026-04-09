@@ -53,6 +53,10 @@ public static class ScoreboardListener
     
     private static void RemoveKills(CCSPlayerController player)
     {
+        if (player.ActionTrackingServices == null)
+        {
+            throw new NullReferenceException("player.ActionTrackingServices is NULL");
+        }
         var matchStats = player.ActionTrackingServices!.MatchStats;
         if (matchStats.Kills == 0) return;
         matchStats.Kills = 0;
@@ -61,6 +65,10 @@ public static class ScoreboardListener
 
     private static void RemoveDamage(CCSPlayerController player)
     {
+        if (player.ActionTrackingServices == null)
+        {
+            throw new NullReferenceException("player.ActionTrackingServices is NULL");
+        }
         var matchStats = player.ActionTrackingServices!.MatchStats;
         if (matchStats.Damage == 0) return; 
         matchStats.Damage = 0;
@@ -68,6 +76,10 @@ public static class ScoreboardListener
     }
     
     private static void RemoveUtilityDamage(CCSPlayerController player) {
+        if (player.ActionTrackingServices == null)
+        {
+            throw new NullReferenceException("player.ActionTrackingServices is NULL");
+        }
         var matchStats = player.ActionTrackingServices!.MatchStats;
         if (matchStats.UtilityDamage == 0) return; 
         matchStats.UtilityDamage = 0;
@@ -76,6 +88,10 @@ public static class ScoreboardListener
 
     private static void RemoveDeaths(CCSPlayerController player)
     {
+        if (player.ActionTrackingServices == null)
+        {
+            throw new NullReferenceException("player.ActionTrackingServices is NULL");
+        }
         var matchStats = player.ActionTrackingServices!.MatchStats;
         if (matchStats.Deaths == 0) return;
         matchStats.Deaths = 0;
@@ -84,6 +100,10 @@ public static class ScoreboardListener
 
     private static void RemoveAssists(CCSPlayerController player)
     {
+        if (player.ActionTrackingServices == null)
+        {
+            throw new NullReferenceException("player.ActionTrackingServices is NULL");
+        }
         var matchStats = player.ActionTrackingServices!.MatchStats;
         if (matchStats.Assists == 0) return;
         matchStats.Assists = 0;
@@ -92,6 +112,10 @@ public static class ScoreboardListener
 
     private static void RemoveEnemiesFlashed(CCSPlayerController player)
     {
+        if (player.ActionTrackingServices == null)
+        {
+            throw new NullReferenceException("player.ActionTrackingServices is NULL");
+        }
         var matchStats = player.ActionTrackingServices!.MatchStats;
         if (matchStats.EnemiesFlashed == 0) return;
         matchStats.EnemiesFlashed = 0;
@@ -100,6 +124,10 @@ public static class ScoreboardListener
     
     private static void RemoveHeadshotKills(CCSPlayerController player)
     {
+        if (player.ActionTrackingServices == null)
+        {
+            throw new NullReferenceException("player.ActionTrackingServices is NULL");
+        }
         var matchStats = player.ActionTrackingServices!.MatchStats;
         if (matchStats.HeadShotKills == 0) return;
         matchStats.HeadShotKills = 0;

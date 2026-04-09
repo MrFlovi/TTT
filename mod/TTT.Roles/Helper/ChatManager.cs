@@ -17,7 +17,7 @@ public class ChatManager(IRoleService roleService) : IPluginBehavior
 
     private HookResult OnSayTeam(CCSPlayerController? caller, CommandInfo info)
     {
-        if (caller == null || !caller.IsReal()) return HookResult.Continue;
+        if (!caller.IsReal()) return HookResult.Continue;
         Role role = roleService.GetRole(caller);
         switch (role)
         {

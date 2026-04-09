@@ -1,10 +1,12 @@
 ﻿using System.Drawing;
+using System.Numerics;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Utils;
+using CounterStrikeSharp.API.Natives.Structs;
 using Microsoft.Extensions.Logging;
 using TTT.Player;
 using TTT.Public.Behaviors;
@@ -15,6 +17,7 @@ using TTT.Public.Mod.Role;
 using TTT.Public.Mod.Round;
 using TTT.Roles.Shop;
 using TTT.Round;
+using TTT.Shop.Items;
 
 namespace TTT.Roles;
 
@@ -30,6 +33,7 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
     private InfoManager? _infoManager;
     private MuteManager? _muteManager;
     private EntityGlowManager? _entityGlowManager;
+    private ModelHandler _modelHandler;
     
     public void Start(BasePlugin parent)
     {
@@ -39,9 +43,11 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
         _infoManager = new InfoManager(this, _roundService, parent);
         _muteManager = new MuteManager(parent);
         _entityGlowManager = new EntityGlowManager(parent, this);
-        ModelHandler.RegisterListener(parent);
+        _modelHandler = new ModelHandler(parent);
+        // ModelHandler.RegisterListener(parent);
         ShopManager.Register(parent, this); 
-        CreditManager.Register(parent, this);
+        //CreditManager.Register(parent, this);
+        // CustomWeapon.OnPluginStart(parent, this);
         
         parent.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnect);
         parent.RegisterEventHandler<EventRoundPrestart>(OnRoundPrepare);
@@ -52,7 +58,8 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
         //parent.RegisterEventHandler<EventPlayerDeath>(OnAfterPlayerDeath);
         parent.RegisterEventHandler<EventPlayerHurt>(OnPlayerDamage, HookMode.Pre);
         
-        parent.RegisterEventHandler<EventItemPurchase>(OnItemPurchase);
+        parent.RegisterEventHandler<EventItemPurchase>(BeforeItemPurchase, HookMode.Pre);
+        //parent.RegisterEventHandler<EventItemPurchase>(AfterItemPurchase, HookMode.Post);
     }
     
     public void SetMoveType(CCSPlayerController? player, MoveType_t moveType)
@@ -63,8 +70,19 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
         Utilities.SetStateChanged(player.PlayerPawn.Value, "CBaseEntity", "m_MoveType");
     }
 
-    public HookResult OnItemPurchase(EventItemPurchase @event, GameEventInfo info)
+    [GameEventHandler]
+    public HookResult BeforeItemPurchase(EventItemPurchase @event, GameEventInfo info)
     {
+        if (@event.Weapon == "weapon_taser") return HookResult.Stop;
+        return HookResult.Continue;
+    }
+    
+    [GameEventHandler]
+    public HookResult AfterItemPurchase(EventItemPurchase @event, GameEventInfo info)
+    {
+        CCSPlayerController? controller = @event.Userid;
+        if (!controller.IsReal()) return HookResult.Continue;
+        
         return HookResult.Continue;
     }
     
@@ -75,10 +93,11 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
         
         foreach (CCSPlayerController controller in Utilities.GetPlayers())
         {
+            if (!controller.IsReal()) continue;
             controller.SwitchTeam(CsTeam.Terrorist);
             
             CCSPlayerPawn? pawn = controller.PlayerPawn.Value;
-            if (pawn == null) continue;
+            if (!pawn.IsReal()) continue;
             
             pawn.BotAllowActive = true;
             controller.RemoveWeapons();
@@ -91,6 +110,17 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
             // Utilities.SetStateChanged(pawn, "CCSPlayerPawn", "m_MoveType");
             // pawn.MaxHealth = 100;
             // pawn.Health = pawn.MaxHealth;
+
+            GamePlayer player = GetPlayer(controller);
+            if (player.HasRDMed)
+            {
+                player.HasRDMed = false;
+                if (PluginConfig.TttConfig.ClearMoneyOnRDM && controller.InGameMoneyServices != null)
+                {
+                    controller.InGameMoneyServices.Account = 0;
+                    Utilities.SetStateChanged(controller, "CCSPlayerController", "m_pInGameMoneyServices");
+                }
+            }
         }
         
         Server.NextFrame(() =>
@@ -98,9 +128,12 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
             foreach (CCSPlayerController controller in Utilities.GetPlayers())
             {
                 CCSPlayerPawn? pawn = controller.PlayerPawn.Value;
-                if (pawn == null) continue;
+                if (!pawn.IsReal()) continue;
                 controller.GiveNamedItem("weapon_knife");
-                controller.GiveNamedItem("weapon_glock");
+                if(!String.IsNullOrEmpty(PluginConfig.TttConfig.StartingSecondary))
+                    controller.GiveNamedItem(PluginConfig.TttConfig.StartingSecondary);
+                if(!String.IsNullOrEmpty(PluginConfig.TttConfig.StartingPrimary))
+                    controller.GiveNamedItem(PluginConfig.TttConfig.StartingPrimary);
             }
         });
 
@@ -143,8 +176,12 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
         {
             target.Remove();
         }
-        
-        
+
+
+        if (ConVar.Find("mp_roundtime") == null || ConVar.Find("mp_solid_teammates") == null)
+        {
+            throw new NullReferenceException("can't find convar mp_roundtime or mp_solid_teammates");
+        }
         
         ConVar.Find("mp_roundtime")!.SetValue((PluginConfig.TttConfig.RoundTimeSeconds + PluginConfig.TttConfig.GraceTime) / 60.0f);
         ConVar.Find("mp_solid_teammates")!.SetValue(0);
@@ -201,41 +238,42 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
 
         CCSPlayerController? killer = @event.Attacker;
         CCSPlayerController? victim = @event.Userid;
-        if (victim == null) return HookResult.Continue;
+        if (!victim.IsReal()) return HookResult.Continue;
         
         // @event.Free();
         
         CCSPlayerPawn? victimPawn = victim.PlayerPawn.Value;
-        if (victimPawn == null) return HookResult.Continue;
-        Vector? pos = victimPawn.AbsOrigin;
+        if (victimPawn == null || !victimPawn.IsValid) return HookResult.Continue;
+        
         QAngle? angle = victimPawn.AbsRotation;
-        if (pos == null || angle == null) return HookResult.Continue;
+        if (angle == null) return HookResult.Continue;
         
         Server.NextFrame(() =>
         {
-            if (killer != null || victim != null || victimPawn != null)
+            if (!victim.IsReal()) return;
+            CCSPlayerPawn? victimPawn2 = victim.PlayerPawn.Value;
+            if (!victimPawn2.IsReal()) return;
+    
+            // victim.PlayerPawn.Value.ForceServerRagdoll = true;
+            if (!killer.IsReal())
             {
-                CCSPlayerPawn? victimPawn = victim.PlayerPawn.Value;
-                if (victimPawn == null) return;
-        
-                // victim.PlayerPawn.Value.ForceServerRagdoll = true;
-                if (killer == null) victim.CommitSuicide(false, true);
-        
-                victim.RemoveWeapons();
-                victim.ModifyScoreBoard();
-                if (killer == null) GetPlayer(victim).SetKiller(killer);
-                else GetPlayer(victim).SetKiller(victim);
-                _muteManager?.Mute(victim);
-        
-                if (IsTraitor(victim)) _traitorsLeft--;
-                if (IsDetective(victim) || IsInnocent(victim)) _innocentsLeft--;
-                if (_traitorsLeft == 0 || _innocentsLeft == 0) Server.NextFrame(() => _roundService?.ForceEnd());
-        
-                Server.NextFrame(() =>
-                {
-                    if(victim != null && killer != null) SendDeathMessage(victim, killer);
-                });
+                victim.CommitSuicide(false, true);
+                GetPlayer(victim).SetKiller(victim);
             }
+            else GetPlayer(victim).SetKiller(killer);
+    
+            victim.RemoveWeapons();
+            victim.ModifyScoreBoard();
+            _muteManager?.Mute(victim);
+    
+            if (IsTraitor(victim)) _traitorsLeft--;
+            if (IsDetective(victim) || IsInnocent(victim)) _innocentsLeft--;
+            if (_traitorsLeft == 0 || _innocentsLeft == 0) Server.NextFrame(() => _roundService?.ForceEnd());
+    
+            Server.NextFrame(() =>
+            {
+                if(victim.IsReal() && killer.IsReal()) SendDeathMessage(victim, killer);
+            });
         });
         
         return HookResult.Continue;
@@ -293,7 +331,7 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
 
         for (var i = 0; i < traitorCount; i++)
         {
-            var chosen = eligible[Random.Shared.Next(eligible.Count)];
+            var chosen = eligible.Exists(player => !player.IsBot) ? eligible.First(player => !player.IsBot) : eligible[Random.Shared.Next(eligible.Count)]; // eligible[Random.Shared.Next(eligible.Count)]
             eligible.Remove(chosen);
             AddTraitor(chosen);
         }
@@ -306,28 +344,37 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
         }
 
         AddInnocents(eligible);
+
+        foreach (GamePlayer gamePlayer in GetPlayers().Values)
+        {
+            gamePlayer.SetStartingCredits();
+        }
         
         Server.RunOnTick(5, () =>
         {
-            _entityGlowManager?.SetPlayersGlow(GetTraitors().ToList(), EntityGlowManager.TraitorGlowColor);
-            _entityGlowManager?.SetPlayersGlow(GetInnocents().ToList(), EntityGlowManager.InnocentGlowColor);
-            _entityGlowManager?.SetPlayersGlow(GetDetectives().ToList(), EntityGlowManager.DetectiveGlowColor);
+            if (_entityGlowManager == null) return;
+            _entityGlowManager.SetPlayersGlow(GetTraitors().ToList(), EntityGlowManager.TraitorGlowColor);
+            _entityGlowManager.SetPlayersGlow(GetInnocents().ToList(), EntityGlowManager.InnocentGlowColor);
+            _entityGlowManager.SetPlayersGlow(GetDetectives().ToList(), EntityGlowManager.DetectiveGlowColor);
         });
     }
 
     public HashSet<CCSPlayerController?> GetTraitors()
     {
-        return Players().Where(player => player.PlayerRole() == Role.Traitor).Select(player => player.Player()).ToHashSet();
+        return Players().Where(player => player.PlayerRole() == Role.Traitor).Select(player => player.Player())
+            .Where(player => player.IsReal()).ToHashSet();
     }
 
     public HashSet<CCSPlayerController?> GetDetectives()
     {
-        return Players().Where(player => player.PlayerRole() == Role.Detective).Select(player => player.Player()).ToHashSet();
+        return Players().Where(player => player.PlayerRole() == Role.Detective).Select(player => player.Player())
+            .Where(player => player.IsReal()).ToHashSet();
     }
 
     public HashSet<CCSPlayerController?> GetInnocents()
     {
-        return Players().Where(player => player.PlayerRole() == Role.Innocent).Select(player => player.Player()).ToHashSet();
+        return Players().Where(player => player.PlayerRole() == Role.Innocent).Select(player => player.Player())
+            .Where(player => player.IsReal()).ToHashSet();
     }
     
 
@@ -342,7 +389,7 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
         player.SwitchTeam(CsTeam.Terrorist);
         player.PrintToCenter(Role.Traitor.FormatStringFullBefore("You are now a"));
         player.PrintToChat(Role.Traitor.FormatStringFullBefore("You are now a"));
-        ModelHandler.SetModelNextServerFrame(player, ModelHandler.ModelPathTmPhoenix);
+        //ModelHandler.SetModelNextServerFrame(player, ModelHandler.ModelPathTmPhoenix);
     }
 
     public void AddDetective(CCSPlayerController player)
@@ -351,7 +398,7 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
         player.SwitchTeam(CsTeam.CounterTerrorist);
         player.PrintToCenter(Role.Detective.FormatStringFullBefore("You are now a"));
         player.GiveNamedItem(CsItem.Taser);
-        ModelHandler.SetModelNextServerFrame(player, ModelHandler.ModelPathCtmSas);
+        //ModelHandler.SetModelNextServerFrame(player, ModelHandler.ModelPathCtmSas);
     }
 
     public void AddInnocents(IEnumerable<CCSPlayerController> players)
@@ -361,7 +408,7 @@ public class RoleManager : PlayerHandler, IRoleService, IPluginBehavior
             GetPlayer(player).SetPlayerRole(Role.Innocent);
             player.PrintToCenter(Role.Innocent.FormatStringFullBefore("You are now an"));
             player.SwitchTeam(CsTeam.Terrorist);     
-            ModelHandler.SetModelNextServerFrame(player, ModelHandler.ModelPathTmPhoenix);
+            //ModelHandler.SetModelNextServerFrame(player, ModelHandler.ModelPathTmPhoenix);
         }
     }
 

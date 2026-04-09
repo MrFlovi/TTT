@@ -5,29 +5,39 @@ using TTT.Public.Shop;
 
 namespace TTT.Shop.Items.Traitor;
 
-public class AwpItem : IShopItem
+public class TeleportGrenade : IShopItem
 {
     public string Name()
     {
-        return "AWP";
+        return "Teleport Grenade";
     }
 
     public string SimpleName()
     {
-        return "awp";
+        return "teleportgrenade";
+    }
+    
+    public string? WeaponName()
+    {
+        return "weapon_decoy";
+    }
+    
+    public string? Model()
+    {
+        return "models\\weapon\\gasgrenade.vmdl";
     }
 
     public int Price()
     {
-        return 2000;
+        return 1;
     }
 
     public BuyResult OnBuy(GamePlayer player)
     {
         if (player.Credits() < Price()) return BuyResult.NotEnoughCredits;
-        if (player.PlayerRole() != Role.Detective) return BuyResult.IncorrectRole;
+        if (player.PlayerRole() != Role.Traitor) return BuyResult.IncorrectRole;
         player.RemoveCredits(Price());
-        player.Player()?.GiveNamedItem(CsItem.AWP);
+        player.Player()?.GiveNamedItem(CsItem.Decoy);
         return BuyResult.Successful;
     }
 }

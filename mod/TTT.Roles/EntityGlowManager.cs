@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Memory;
+using TTT.Public.Extensions;
 using TTT.Public.Mod.Role;
 
 namespace TTT.Roles;
@@ -24,7 +25,7 @@ public class EntityGlowManager
     {
         foreach (var controller in controllers)
         {
-            if (controller == null || controller.PlayerPawn.Value == null) continue;
+            if (!controller.IsReal() || !controller.PlayerPawn.IsValid || !controller.PlayerPawn.Value.IsReal()) continue;
             SetGlowing(controller.PlayerPawn.Value, color);
         }
     }
@@ -92,12 +93,14 @@ public class EntityGlowManager
     {
         CBaseModelEntity? modelGlow = Utilities.CreateEntityByName<CBaseModelEntity>("prop_dynamic");
         CBaseModelEntity? modelRelay = Utilities.CreateEntityByName<CBaseModelEntity>("prop_dynamic");
-        if (modelGlow == null || modelRelay == null)
+        if (modelGlow == null || !modelGlow.IsValid || modelRelay == null || !modelRelay.IsValid ||
+            pawn.CBodyComponent == null || pawn.CBodyComponent.Handle == IntPtr.Zero ||
+            pawn.CBodyComponent.SceneNode == null || pawn.CBodyComponent.SceneNode.Handle == IntPtr.Zero) 
         {
             return;
         }
 
-        string modelName = pawn.CBodyComponent!.SceneNode!.GetSkeletonInstance().ModelState.ModelName;
+        string modelName = pawn.CBodyComponent.SceneNode.GetSkeletonInstance().ModelState.ModelName;
 
         modelRelay.SetModel(modelName);
         modelRelay.Spawnflags = 256u;

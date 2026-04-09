@@ -12,7 +12,6 @@ using TTT.Public.Mod.Role;
 using TTT.Public.Mod.Round;
 using TTT.Public.Player;
 using TTT.Round;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace TTT.Roles;
 
@@ -64,7 +63,7 @@ public class InfoManager
         CCSPlayerController? player = @event.Userid;
         CCSPlayerController target = new CCSPlayerController(@event.Target);
 
-        if (player == null || !player.IsReal() || !target.IsReal()) return HookResult.Continue;
+        if (!player.IsReal() || !target.IsReal()) return HookResult.Continue;
         
         _spectatorLookAtRole.TryAdd(player, new Tuple<string, Role>(target.PlayerName, _roleService.GetRole(target)));
         

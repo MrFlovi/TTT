@@ -35,6 +35,7 @@ public class ShopMenu
             case BuyResult.Successful:
                 controller.PrintToChat(StringUtils.FormatTTT($"You have bought {item.Name()}"));
                 player.AddItem(item);
+                _shopItemHandler.OnItemBuy(controller, item);
                 break;
             case BuyResult.AlreadyOwned:
                 controller.PrintToChat(StringUtils.FormatTTT($"You already own {item.Name()}"));

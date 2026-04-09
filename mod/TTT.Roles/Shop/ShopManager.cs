@@ -40,7 +40,6 @@ public class ShopManager
                 break;
             case Role.Detective:
                 new ShopMenu(_plugin, DetectiveShopHandler.Get(), player).Open(controller);
-
                 player.SetShopOpen(true);
                 break;
             case Role.Traitor:

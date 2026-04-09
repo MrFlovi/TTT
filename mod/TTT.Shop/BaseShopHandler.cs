@@ -86,5 +86,8 @@ public class BaseShopHandler : IShopItemHandler, IPluginBehavior
         _items.Add(item);
     }
 
-    
+    public void OnItemBuy(CCSPlayerController player, IShopItem item)
+    {
+        // CustomWeapon.OnEquip(player, item);
+    }
 }

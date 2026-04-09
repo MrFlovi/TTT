@@ -42,7 +42,7 @@ public class RolesCommand : IPluginBehavior
         foreach (var gamePlayer in _roleService.Players())
         {
             CCSPlayerController? plr = gamePlayer.Player();
-            if (plr == null) continue;
+            if (!plr.IsReal()) continue;
             sb.AppendLine(StringUtils.FormatTTT(gamePlayer.PlayerRole().FormatStringAfter(plr.PlayerName)));
         }
         

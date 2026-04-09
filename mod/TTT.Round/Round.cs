@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Text;
 using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using TTT.Public.Configuration;
 using TTT.Public.Extensions;
@@ -63,7 +64,8 @@ public class Round
     {
         foreach (var player in _roleService.GetInnocents())
         {
-            Server.NextFrame(() => player?.PrintToChat(StringUtils.FormatTTT("You are now an innocent")));
+            if (!player.IsReal()) continue;
+            Server.NextFrame(() => player.PrintToChat(StringUtils.FormatTTT("You are now an innocent")));
         }
     }
     
@@ -73,16 +75,23 @@ public class Round
         
         foreach (var traitor in traitors)
         {
-            Server.NextFrame(() => traitor?.PrintToChat(StringUtils.FormatTTT("You are a Traitor")));
-            Server.NextFrame(() => traitor?.PrintToChat(StringUtils.FormatTTT("Traitors:")));
-            foreach (var player in traitors)
+            if (!traitor.IsReal()) continue;
+            Server.NextFrame(() =>
             {
-                if (player != null)
+                if (traitor.IsReal())
                 {
-                    var message = StringUtils.FormatTTT(Role.Traitor.FormatStringFullAfter(player.PlayerName));
-                    Server.NextFrame(() => traitor?.PrintToChat(message));
+                    traitor.PrintToChat(StringUtils.FormatTTT("You are a Traitor"));
+                    traitor.PrintToChat(StringUtils.FormatTTT("Other Traitors:"));
+                    foreach (var player in traitors)
+                    {
+                        if (player.IsReal())
+                        {
+                            var message = StringUtils.FormatTTT(Role.Traitor.FormatStringFullAfter(player.PlayerName));
+                            traitor.PrintToChat(message);
+                        }
+                    }
                 }
-            }
+            });
         }
     }
 
@@ -92,16 +101,20 @@ public class Round
         
         foreach (var detective in detectives)
         {
-            Server.NextFrame(() => detective?.PrintToChat(StringUtils.FormatTTT("You are a Detective")));
-            Server.NextFrame(() => detective?.PrintToChat(StringUtils.FormatTTT("Detective:")));
-            foreach (var player in detectives)
+            if (!detective.IsReal()) continue;
+            Server.NextFrame(() =>
             {
-                if (player != null)
+                detective.PrintToChat(StringUtils.FormatTTT("You are a Detective"));
+                detective.PrintToChat(StringUtils.FormatTTT("Detective:"));
+                foreach (var player in detectives)
                 {
-                    var message = StringUtils.FormatTTT(Role.Detective.FormatStringFullAfter(" " + player.PlayerName));
-                    Server.NextFrame(() => detective?.PrintToChat(message));
+                    if (player.IsReal())
+                    {
+                        var message = StringUtils.FormatTTT(Role.Detective.FormatStringFullAfter(" " + player.PlayerName));
+                        detective.PrintToChat(message);
+                    }
                 }
-            }
+            });
         }
     }
 }

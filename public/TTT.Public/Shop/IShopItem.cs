@@ -24,6 +24,18 @@ public interface IShopItem
     int Price();
     
     /// <summary>
+    /// Weapon name if item is based on weapon
+    /// </summary>
+    /// <returns>The inherited weapon name</returns>
+    string? WeaponName();
+    
+    /// <summary>
+    /// Path to the custom model
+    /// </summary>
+    /// <returns>Model used for item</returns>
+    string? Model();
+    
+    /// <summary>
     /// Called when the player buys the item
     /// </summary>
     /// <param name="player">The player that bought the item</param>

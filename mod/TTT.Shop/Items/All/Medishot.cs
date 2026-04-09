@@ -1,31 +1,29 @@
 ﻿using CounterStrikeSharp.API.Modules.Entities.Constants;
 using TTT.Player;
-using TTT.Public.Mod.Role;
 using TTT.Public.Shop;
 
-namespace TTT.Shop.Items.Traitor;
+namespace TTT.Shop.Items.Detective;
 
-public class AkItem : IShopItem
+public class Medishot : IShopItem
 {
     public string Name()
     {
-        return "AK-47";
+        return "Medishot";
     }
 
     public string SimpleName()
     {
-        //css_buy ak47
-        return "ak47";
+        return "medishot";
     }
 
     public string? WeaponName()
     {
-        return "weapon_ak47";
+        return "weapon_healthshot";
     }
     
     public string? Model()
     {
-        return "models\\weapon\\laserblaster\\laserblaster.vmdl";
+        return null;
     }
     
     public int Price()
@@ -36,10 +34,9 @@ public class AkItem : IShopItem
     public BuyResult OnBuy(GamePlayer player)
     {
         if (player.Credits() < Price()) return BuyResult.NotEnoughCredits;
-        if (player.PlayerRole() != Role.Traitor) return BuyResult.IncorrectRole;
         player.RemoveCredits(Price());
         var playerObject = player.Player();
-        playerObject?.GiveNamedItem(CsItem.AK47);
+        playerObject?.GiveNamedItem(CsItem.Healthshot);
         return BuyResult.Successful;
     }
 }

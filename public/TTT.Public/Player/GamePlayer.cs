@@ -20,6 +20,9 @@ public class GamePlayer : IInventory
     private bool _isFound = false;
     private bool _isDead = false;
 
+    public bool HasRDMed = false;
+    public bool IsPoisoned = false;
+
     public GamePlayer(Role playerRole, long credits, int karma, int playerId)
     {
         _playerRole = playerRole;
@@ -101,20 +104,32 @@ public class GamePlayer : IInventory
     public void AddCredits(long increment)
     {
         _credits += increment;
-        Player()!.InGameMoneyServices!.Account += (int) increment;
-        Utilities.SetStateChanged(Player()!, "CCSPlayerController", "m_pInGameMoneyServices");
     }
 
     public void RemoveCredits(long decrement)
     {
         _credits -= decrement;
-        Player()!.InGameMoneyServices!.Account = Math.Max(0, Player()!.InGameMoneyServices!.Account - (int) decrement);
-        Utilities.SetStateChanged(Player()!, "CCSPlayerController", "m_pInGameMoneyServices");
     }
 
     public void ResetCredits()
     {
-        _credits = 500; 
+        _credits = 0;
+    }
+
+    public void SetStartingCredits()
+    {
+        switch (_playerRole)
+        {
+            case Role.Detective:
+                _credits = 2; 
+                break;
+            case Role.Traitor:
+                _credits = 1; 
+                break;
+            case Role.Innocent:
+                _credits = 0; 
+                break;
+        }
     }
     
     public void ResetItems()
